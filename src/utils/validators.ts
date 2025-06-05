@@ -45,16 +45,28 @@ const AnalyzeComponentUsageInputSchema = z.object({
 });
 
 const ExportDesignTokensInputSchema = z.object({
-  tokenTypes: z.array(z.enum(['color', 'spacing', 'typography', 'shadow', 'border'])).optional(),
+  tokenTypes: z.array(z.enum(['color', 'spacing', 'typography', 'shadow', 'border', 'other'])).optional(),
   format: z.enum(['json', 'css', 'scss']).optional()
 });
 
 export function validateListComponentsInput(input: any): ListComponentsInput {
-  return ListComponentsInputSchema.parse(input);
+  const parsed = ListComponentsInputSchema.parse(input);
+  const result: ListComponentsInput = {};
+  if (parsed.category !== undefined) {
+    result.category = parsed.category;
+  }
+  return result;
 }
 
 export function validateGetComponentHTMLInput(input: any): GetComponentHTMLInput {
-  return GetComponentHTMLInputSchema.parse(input);
+  const parsed = GetComponentHTMLInputSchema.parse(input);
+  const result: GetComponentHTMLInput = {
+    componentId: parsed.componentId
+  };
+  if (parsed.includeStyles !== undefined) {
+    result.includeStyles = parsed.includeStyles;
+  }
+  return result;
 }
 
 export function validateGetComponentVariantsInput(input: any): GetComponentVariantsInput {
@@ -62,21 +74,58 @@ export function validateGetComponentVariantsInput(input: any): GetComponentVaria
 }
 
 export function validateSearchComponentsInput(input: any): SearchComponentsInput {
-  return SearchComponentsInputSchema.parse(input);
+  const parsed = SearchComponentsInputSchema.parse(input);
+  const result: SearchComponentsInput = {
+    query: parsed.query
+  };
+  if (parsed.searchIn !== undefined) {
+    result.searchIn = parsed.searchIn;
+  }
+  return result;
 }
 
 export function validateGetComponentStylesInput(input: any): GetComponentStylesInput {
-  return GetComponentStylesInputSchema.parse(input);
+  const parsed = GetComponentStylesInputSchema.parse(input);
+  const result: GetComponentStylesInput = {
+    componentId: parsed.componentId
+  };
+  if (parsed.extractCustomProperties !== undefined) {
+    result.extractCustomProperties = parsed.extractCustomProperties;
+  }
+  return result;
 }
 
 export function validateCompareComponentsInput(input: any): CompareComponentsInput {
-  return CompareComponentsInputSchema.parse(input);
+  const parsed = CompareComponentsInputSchema.parse(input);
+  const result: CompareComponentsInput = {
+    componentId1: parsed.componentId1,
+    componentId2: parsed.componentId2
+  };
+  if (parsed.compareStyles !== undefined) {
+    result.compareStyles = parsed.compareStyles;
+  }
+  return result;
 }
 
 export function validateAnalyzeComponentUsageInput(input: any): AnalyzeComponentUsageInput {
-  return AnalyzeComponentUsageInputSchema.parse(input);
+  const parsed = AnalyzeComponentUsageInputSchema.parse(input);
+  const result: AnalyzeComponentUsageInput = {
+    componentName: parsed.componentName
+  };
+  if (parsed.includeProps !== undefined) {
+    result.includeProps = parsed.includeProps;
+  }
+  return result;
 }
 
 export function validateExportDesignTokensInput(input: any): ExportDesignTokensInput {
-  return ExportDesignTokensInputSchema.parse(input);
+  const parsed = ExportDesignTokensInputSchema.parse(input);
+  const result: ExportDesignTokensInput = {};
+  if (parsed.tokenTypes !== undefined) {
+    result.tokenTypes = parsed.tokenTypes;
+  }
+  if (parsed.format !== undefined) {
+    result.format = parsed.format;
+  }
+  return result;
 }

@@ -41,6 +41,6 @@ export interface AnalyzeComponentUsageInput {
 }
 
 export interface ExportDesignTokensInput {
-  tokenTypes?: ('color' | 'spacing' | 'typography' | 'shadow' | 'border')[];
+  tokenTypes?: ('color' | 'spacing' | 'typography' | 'shadow' | 'border' | 'other')[];
   format?: 'json' | 'css' | 'scss';
 }

@@ -15,7 +15,7 @@ export const exportDesignTokensTool: Tool = {
         type: 'array',
         items: {
           type: 'string',
-          enum: ['color', 'spacing', 'typography', 'shadow', 'border']
+          enum: ['color', 'spacing', 'typography', 'shadow', 'border', 'other']
         },
         description: 'Filter tokens by type (default: all types)'
       },

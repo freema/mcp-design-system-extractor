@@ -36,7 +36,8 @@ export async function handleSearchComponents(input: any) {
     
     Object.values(storiesIndex.stories).forEach(story => {
       const componentName = story.title.split('/').pop() || story.title;
-      const category = story.title.split('/').slice(0, -1).join('/') || '';
+      const categoryParts = story.title.split('/').slice(0, -1);
+      const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
       
       let matches = false;
       
@@ -48,25 +49,30 @@ export async function handleSearchComponents(input: any) {
           matches = story.title.toLowerCase().includes(query);
           break;
         case 'category':
-          matches = category.toLowerCase().includes(query);
+          matches = category ? category.toLowerCase().includes(query) : false;
           break;
         case 'all':
         default:
           matches = componentName.toLowerCase().includes(query) ||
                    story.title.toLowerCase().includes(query) ||
-                   category.toLowerCase().includes(query);
+                   Boolean(category && category.toLowerCase().includes(query));
           break;
       }
       
       if (matches) {
         if (!componentMap.has(componentName)) {
-          componentMap.set(componentName, {
+          const componentInfo: ComponentInfo = {
             id: story.id,
             name: componentName,
             title: story.title,
-            category: category || undefined,
             stories: []
-          });
+          };
+          
+          if (category) {
+            componentInfo.category = category;
+          }
+          
+          componentMap.set(componentName, componentInfo);
         }
         
         componentMap.get(componentName)!.stories.push(story);

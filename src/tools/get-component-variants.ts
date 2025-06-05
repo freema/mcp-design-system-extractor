@@ -34,8 +34,8 @@ export async function handleGetComponentVariants(input: any) {
         variants.push({
           id: story.id,
           name: story.name,
-          args: story.args,
-          parameters: story.parameters
+          ...(story.args && { args: story.args }),
+          ...(story.parameters && { parameters: story.parameters })
         });
       }
     });

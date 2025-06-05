@@ -1,5 +1,5 @@
 import { parse } from 'node-html-parser';
-import { StorybookIndex, StorybookStory, ComponentHTML } from '../types/storybook.js';
+import { StorybookIndex, ComponentHTML } from '../types/storybook.js';
 
 export class StorybookClient {
   private baseUrl: string;
@@ -104,8 +104,10 @@ export class StorybookClient {
     
     let match;
     while ((match = classRegex.exec(html)) !== null) {
-      const classNames = match[1].split(/\s+/).filter(Boolean);
-      classNames.forEach(className => classes.add(className));
+      if (match[1]) {
+        const classNames = match[1].split(/\s+/).filter(Boolean);
+        classNames.forEach(className => classes.add(className));
+      }
     }
     
     return Array.from(classes).sort();

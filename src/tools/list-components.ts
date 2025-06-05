@@ -29,20 +29,26 @@ export async function handleListComponents(input: any) {
     
     Object.values(storiesIndex.stories).forEach(story => {
       const componentName = story.title.split('/').pop() || story.title;
-      const category = story.title.split('/').slice(0, -1).join('/') || undefined;
+      const categoryParts = story.title.split('/').slice(0, -1);
+      const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
       
       if (validatedInput.category && category !== validatedInput.category) {
         return;
       }
       
       if (!componentMap.has(componentName)) {
-        componentMap.set(componentName, {
+        const componentInfo: ComponentInfo = {
           id: story.id,
           name: componentName,
           title: story.title,
-          category,
           stories: []
-        });
+        };
+        
+        if (category) {
+          componentInfo.category = category;
+        }
+        
+        componentMap.set(componentName, componentInfo);
       }
       
       componentMap.get(componentName)!.stories.push(story);

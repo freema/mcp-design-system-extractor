@@ -126,7 +126,9 @@ function extractTags(html: string): string[] {
   
   let match;
   while ((match = tagRegex.exec(html)) !== null) {
-    tags.add(match[1].toLowerCase());
+    if (match[1]) {
+      tags.add(match[1].toLowerCase());
+    }
   }
   
   return Array.from(tags).sort();

@@ -49,6 +49,8 @@ export function parseCSSRules(css: string): CSSRule[] {
   let match;
   
   while ((match = ruleRegex.exec(css)) !== null) {
+    if (!match[1] || !match[2]) continue;
+    
     const selector = match[1].trim();
     const styleBlock = match[2];
     
@@ -57,6 +59,8 @@ export function parseCSSRules(css: string): CSSRule[] {
     let propMatch;
     
     while ((propMatch = propertyRegex.exec(styleBlock)) !== null) {
+      if (!propMatch[1] || !propMatch[2]) continue;
+      
       const property = propMatch[1].trim();
       const value = propMatch[2].trim();
       styles[property] = value;
@@ -77,6 +81,8 @@ export function extractDesignTokens(cssContent: string): DesignToken[] {
   let match;
   
   while ((match = customPropertyRegex.exec(cssContent)) !== null) {
+    if (!match[1] || !match[2]) continue;
+    
     const name = match[1];
     const value = match[2].trim();
     
@@ -97,6 +103,8 @@ function extractCustomPropertiesFromStyle(style: string, customProperties: Recor
   let match;
   
   while ((match = propertyRegex.exec(style)) !== null) {
+    if (!match[1] || !match[2]) continue;
+    
     const name = `--${match[1]}`;
     const value = match[2].trim();
     customProperties[name] = value;
@@ -108,6 +116,8 @@ function extractCustomPropertiesFromCSS(css: string, customProperties: Record<st
   let match;
   
   while ((match = propertyRegex.exec(css)) !== null) {
+    if (!match[1] || !match[2]) continue;
+    
     const name = `--${match[1]}`;
     const value = match[2].trim();
     customProperties[name] = value;
