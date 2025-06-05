@@ -1,0 +1,83 @@
+{
+  "name": "mcp-design-system-extractor",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) server for Storybook design system extraction",
+  "author": "graslt",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "mcp-design-system-extractor": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "setup": "node scripts/setup-mcp-config.js",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "check": "npm run typecheck && npm run lint && npm run format:check",
+    "check:all": "npm run check && npm run test:run && npm run build",
+    "prepublishOnly": "npm run clean && npm run build",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "inspector:dev": "NODE_ENV=development npx @modelcontextprotocol/inspector npx tsx src/index.ts",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "test:ui": "vitest --ui"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "storybook",
+    "design-system",
+    "component-extraction",
+    "web-components",
+    "claude",
+    "ai"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "zod": "^3.22.4",
+    "node-html-parser": "^6.1.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^3.1.4",
+    "@vitest/ui": "^3.1.4",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.0",
+    "prettier": "^3.5.3",
+    "tsup": "^8.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^3.1.4"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "examples",
+    "scripts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graslt/mcp-design-system-extractor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/graslt/mcp-design-system-extractor/issues"
+  },
+  "homepage": "https://github.com/graslt/mcp-design-system-extractor#readme"
+}
