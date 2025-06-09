@@ -25,9 +25,26 @@ export async function handleListComponents(input: any) {
     const client = new StorybookClient();
     
     const storiesIndex = await client.fetchStoriesIndex();
-    const componentMap = new Map<string, ComponentInfo>();
     
-    Object.values(storiesIndex.stories).forEach(story => {
+    if (!storiesIndex) {
+      throw new Error('Failed to fetch stories index - received null or undefined');
+    }
+    
+    // Support both v3 (stories) and v4 (entries) format
+    const storiesData = storiesIndex.stories || storiesIndex.entries;
+    
+    if (!storiesData || typeof storiesData !== 'object') {
+      throw new Error(`Invalid stories index structure. Expected object with 'stories' or 'entries' property, got: ${JSON.stringify(storiesIndex).substring(0, 200)}...`);
+    }
+    
+    const componentMap = new Map<string, ComponentInfo>();
+    const stories = Object.values(storiesData);
+    
+    if (stories.length === 0) {
+      return formatSuccessResponse([], 'No components found in Storybook');
+    }
+    
+    stories.forEach(story => {
       const componentName = story.title.split('/').pop() || story.title;
       const categoryParts = story.title.split('/').slice(0, -1);
       const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;

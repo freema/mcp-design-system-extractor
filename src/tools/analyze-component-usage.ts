@@ -29,7 +29,8 @@ export async function handleAnalyzeComponentUsage(input: any) {
     const client = new StorybookClient();
     
     const storiesIndex = await client.fetchStoriesIndex();
-    const componentStories = Object.values(storiesIndex.stories).filter(story => {
+    const stories = storiesIndex.stories || storiesIndex.entries || {};
+    const componentStories = Object.values(stories).filter(story => {
       const componentName = story.title.split('/').pop() || story.title;
       return componentName.toLowerCase() === validatedInput.componentName.toLowerCase();
     });

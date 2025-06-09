@@ -37,7 +37,8 @@ export async function handleExportDesignTokens(input: any) {
     const storiesIndex = await client.fetchStoriesIndex();
     const allTokens = new Map<string, DesignToken>();
     
-    const storyIds = Object.keys(storiesIndex.stories).slice(0, 5);
+    const stories = storiesIndex.stories || storiesIndex.entries || {};
+    const storyIds = Object.keys(stories).slice(0, 5);
     
     for (const storyId of storyIds) {
       try {

@@ -12,7 +12,8 @@ export interface StorybookStory {
 
 export interface StorybookIndex {
   v: number;
-  stories: Record<string, StorybookStory>;
+  stories?: Record<string, StorybookStory>;
+  entries?: Record<string, StorybookStory>;
 }
 
 export interface ComponentInfo {

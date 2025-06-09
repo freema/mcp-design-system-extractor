@@ -27,7 +27,8 @@ export async function handleGetComponentVariants(input: any) {
     const storiesIndex = await client.fetchStoriesIndex();
     const variants: ComponentVariant[] = [];
     
-    Object.values(storiesIndex.stories).forEach(story => {
+    const stories = storiesIndex.stories || storiesIndex.entries || {};
+    Object.values(stories).forEach(story => {
       const componentName = story.title.split('/').pop() || story.title;
       
       if (componentName.toLowerCase() === validatedInput.componentName.toLowerCase()) {

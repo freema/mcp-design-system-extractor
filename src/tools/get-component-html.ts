@@ -27,7 +27,15 @@ export async function handleGetComponentHTML(input: any) {
     const validatedInput = validateGetComponentHTMLInput(input);
     const client = new StorybookClient();
     
-    const componentHTML = await client.fetchComponentHTML(validatedInput.componentId);
+    // Add timeout wrapper
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Operation timed out after 8 seconds')), 8000)
+    );
+    
+    const componentHTML = await Promise.race([
+      client.fetchComponentHTML(validatedInput.componentId),
+      timeoutPromise
+    ]) as ComponentHTML;
     
     const response = {
       storyId: componentHTML.storyId,

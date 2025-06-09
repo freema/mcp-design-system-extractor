@@ -34,7 +34,8 @@ export async function handleSearchComponents(input: any) {
     const storiesIndex = await client.fetchStoriesIndex();
     const componentMap = new Map<string, ComponentInfo>();
     
-    Object.values(storiesIndex.stories).forEach(story => {
+    const stories = storiesIndex.stories || storiesIndex.entries || {};
+    Object.values(stories).forEach(story => {
       const componentName = story.title.split('/').pop() || story.title;
       const categoryParts = story.title.split('/').slice(0, -1);
       const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
