@@ -4,49 +4,55 @@ import {
   GetComponentHTMLInput,
   GetComponentVariantsInput,
   SearchComponentsInput,
-  GetComponentStylesInput,
-  CompareComponentsInput,
-  AnalyzeComponentUsageInput,
-  ExportDesignTokensInput
+  GetComponentPropsInput,
+  GetComponentDependenciesInput,
+  GetLayoutComponentsInput,
+  GetThemeInfoInput,
+  GetComponentByPurposeInput,
+  GetComponentCompositionExamplesInput,
 } from '../types/tools.js';
 
 const ListComponentsInputSchema = z.object({
-  category: z.string().optional()
+  category: z.string().optional(),
 });
 
 const GetComponentHTMLInputSchema = z.object({
   componentId: z.string(),
-  includeStyles: z.boolean().optional()
+  includeStyles: z.boolean().optional(),
 });
 
 const GetComponentVariantsInputSchema = z.object({
-  componentName: z.string()
+  componentName: z.string(),
 });
 
 const SearchComponentsInputSchema = z.object({
   query: z.string(),
-  searchIn: z.enum(['name', 'title', 'category', 'all']).optional()
+  searchIn: z.enum(['name', 'title', 'category', 'all']).optional(),
 });
 
-const GetComponentStylesInputSchema = z.object({
+const GetComponentPropsInputSchema = z.object({
   componentId: z.string(),
-  extractCustomProperties: z.boolean().optional()
 });
 
-const CompareComponentsInputSchema = z.object({
-  componentId1: z.string(),
-  componentId2: z.string(),
-  compareStyles: z.boolean().optional()
+const GetComponentDependenciesInputSchema = z.object({
+  componentId: z.string(),
 });
 
-const AnalyzeComponentUsageInputSchema = z.object({
-  componentName: z.string(),
-  includeProps: z.boolean().optional()
+const GetLayoutComponentsInputSchema = z.object({
+  includeExamples: z.boolean().optional(),
 });
 
-const ExportDesignTokensInputSchema = z.object({
-  tokenTypes: z.array(z.enum(['color', 'spacing', 'typography', 'shadow', 'border', 'other'])).optional(),
-  format: z.enum(['json', 'css', 'scss']).optional()
+const GetThemeInfoInputSchema = z.object({
+  includeAll: z.boolean().optional(),
+});
+
+const GetComponentByPurposeInputSchema = z.object({
+  purpose: z.string(),
+});
+
+const GetComponentCompositionExamplesInputSchema = z.object({
+  componentId: z.string(),
+  limit: z.number().optional(),
 });
 
 export function validateListComponentsInput(input: any): ListComponentsInput {
@@ -61,7 +67,7 @@ export function validateListComponentsInput(input: any): ListComponentsInput {
 export function validateGetComponentHTMLInput(input: any): GetComponentHTMLInput {
   const parsed = GetComponentHTMLInputSchema.parse(input);
   const result: GetComponentHTMLInput = {
-    componentId: parsed.componentId
+    componentId: parsed.componentId,
   };
   if (parsed.includeStyles !== undefined) {
     result.includeStyles = parsed.includeStyles;
@@ -76,7 +82,7 @@ export function validateGetComponentVariantsInput(input: any): GetComponentVaria
 export function validateSearchComponentsInput(input: any): SearchComponentsInput {
   const parsed = SearchComponentsInputSchema.parse(input);
   const result: SearchComponentsInput = {
-    query: parsed.query
+    query: parsed.query,
   };
   if (parsed.searchIn !== undefined) {
     result.searchIn = parsed.searchIn;
@@ -84,48 +90,45 @@ export function validateSearchComponentsInput(input: any): SearchComponentsInput
   return result;
 }
 
-export function validateGetComponentStylesInput(input: any): GetComponentStylesInput {
-  const parsed = GetComponentStylesInputSchema.parse(input);
-  const result: GetComponentStylesInput = {
-    componentId: parsed.componentId
-  };
-  if (parsed.extractCustomProperties !== undefined) {
-    result.extractCustomProperties = parsed.extractCustomProperties;
+export function validateGetComponentPropsInput(input: any): GetComponentPropsInput {
+  return GetComponentPropsInputSchema.parse(input);
+}
+
+export function validateGetComponentDependenciesInput(input: any): GetComponentDependenciesInput {
+  return GetComponentDependenciesInputSchema.parse(input);
+}
+
+export function validateGetLayoutComponentsInput(input: any): GetLayoutComponentsInput {
+  const parsed = GetLayoutComponentsInputSchema.parse(input);
+  const result: GetLayoutComponentsInput = {};
+  if (parsed.includeExamples !== undefined) {
+    result.includeExamples = parsed.includeExamples;
   }
   return result;
 }
 
-export function validateCompareComponentsInput(input: any): CompareComponentsInput {
-  const parsed = CompareComponentsInputSchema.parse(input);
-  const result: CompareComponentsInput = {
-    componentId1: parsed.componentId1,
-    componentId2: parsed.componentId2
-  };
-  if (parsed.compareStyles !== undefined) {
-    result.compareStyles = parsed.compareStyles;
+export function validateGetThemeInfoInput(input: any): GetThemeInfoInput {
+  const parsed = GetThemeInfoInputSchema.parse(input);
+  const result: GetThemeInfoInput = {};
+  if (parsed.includeAll !== undefined) {
+    result.includeAll = parsed.includeAll;
   }
   return result;
 }
 
-export function validateAnalyzeComponentUsageInput(input: any): AnalyzeComponentUsageInput {
-  const parsed = AnalyzeComponentUsageInputSchema.parse(input);
-  const result: AnalyzeComponentUsageInput = {
-    componentName: parsed.componentName
-  };
-  if (parsed.includeProps !== undefined) {
-    result.includeProps = parsed.includeProps;
-  }
-  return result;
+export function validateGetComponentByPurposeInput(input: any): GetComponentByPurposeInput {
+  return GetComponentByPurposeInputSchema.parse(input);
 }
 
-export function validateExportDesignTokensInput(input: any): ExportDesignTokensInput {
-  const parsed = ExportDesignTokensInputSchema.parse(input);
-  const result: ExportDesignTokensInput = {};
-  if (parsed.tokenTypes !== undefined) {
-    result.tokenTypes = parsed.tokenTypes;
-  }
-  if (parsed.format !== undefined) {
-    result.format = parsed.format;
+export function validateGetComponentCompositionExamplesInput(
+  input: any
+): GetComponentCompositionExamplesInput {
+  const parsed = GetComponentCompositionExamplesInputSchema.parse(input);
+  const result: GetComponentCompositionExamplesInput = {
+    componentId: parsed.componentId,
+  };
+  if (parsed.limit !== undefined) {
+    result.limit = parsed.limit;
   }
   return result;
 }

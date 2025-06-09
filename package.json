@@ -1,7 +1,7 @@
 {
   "name": "mcp-design-system-extractor",
   "version": "1.0.0",
-  "description": "Model Context Protocol (MCP) server for Storybook design system extraction",
+  "description": "Simplified MCP server for Storybook design system extraction with component analysis tools",
   "author": "graslt",
   "license": "MIT",
   "type": "module",

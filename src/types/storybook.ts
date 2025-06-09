@@ -38,14 +38,6 @@ export interface ComponentHTML {
   classes?: string[];
 }
 
-export interface ComponentStyles {
-  storyId: string;
-  cssRules: CSSRule[];
-  inlineStyles: Record<string, string>;
-  classNames: string[];
-  customProperties: Record<string, string>;
-}
-
 export interface CSSRule {
   selector: string;
   styles: Record<string, string>;
@@ -59,26 +51,55 @@ export interface DesignToken {
   category?: string;
 }
 
-export interface ComponentComparison {
-  component1: ComponentHTML;
-  component2: ComponentHTML;
-  differences: {
-    htmlDiff: string[];
-    stylesDiff: string[];
-    classesDiff: {
-      added: string[];
-      removed: string[];
-    };
+export interface ComponentProps {
+  storyId: string;
+  props: Record<string, PropDefinition>;
+  defaultProps?: Record<string, any>;
+}
+
+export interface PropDefinition {
+  name: string;
+  type: string;
+  required: boolean;
+  defaultValue?: any;
+  description?: string;
+  control?: {
+    type: string;
+    options?: any[];
   };
 }
 
-export interface ComponentUsageAnalysis {
-  componentName: string;
-  totalVariants: number;
-  commonProps: Record<string, {
-    frequency: number;
-    values: string[];
-  }>;
-  propsUsage: Record<string, number>;
-  categories: string[];
+export interface ComponentDependencies {
+  storyId: string;
+  dependencies: string[];
+  internalComponents: string[];
+  externalComponents: string[];
+}
+
+export interface ThemeInfo {
+  colors: Record<string, string>;
+  spacing: Record<string, string>;
+  typography: Record<string, any>;
+  breakpoints: Record<string, string>;
+  shadows: Record<string, string>;
+  radii: Record<string, string>;
+}
+
+export interface ComponentByPurpose {
+  purpose: string;
+  components: ComponentInfo[];
+  description?: string;
+}
+
+export interface ComponentComposition {
+  storyId: string;
+  examples: CompositionExample[];
+}
+
+export interface CompositionExample {
+  name: string;
+  description: string;
+  html: string;
+  components: string[];
+  props?: Record<string, any>;
 }

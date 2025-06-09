@@ -24,23 +24,27 @@ export interface SearchComponentsInput {
   searchIn?: 'name' | 'title' | 'category' | 'all';
 }
 
-export interface GetComponentStylesInput {
+export interface GetComponentPropsInput {
   componentId: string;
-  extractCustomProperties?: boolean;
 }
 
-export interface CompareComponentsInput {
-  componentId1: string;
-  componentId2: string;
-  compareStyles?: boolean;
+export interface GetComponentDependenciesInput {
+  componentId: string;
 }
 
-export interface AnalyzeComponentUsageInput {
-  componentName: string;
-  includeProps?: boolean;
+export interface GetLayoutComponentsInput {
+  includeExamples?: boolean;
 }
 
-export interface ExportDesignTokensInput {
-  tokenTypes?: ('color' | 'spacing' | 'typography' | 'shadow' | 'border' | 'other')[];
-  format?: 'json' | 'css' | 'scss';
+export interface GetThemeInfoInput {
+  includeAll?: boolean;
+}
+
+export interface GetComponentByPurposeInput {
+  purpose: string;
+}
+
+export interface GetComponentCompositionExamplesInput {
+  componentId: string;
+  limit?: number;
 }

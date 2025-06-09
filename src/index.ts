@@ -19,10 +19,12 @@ const toolHandlers = new Map<string, (input: any) => Promise<any>>([
   ['get_component_html', tools.handleGetComponentHTML],
   ['get_component_variants', tools.handleGetComponentVariants],
   ['search_components', tools.handleSearchComponents],
-  ['get_component_styles', tools.handleGetComponentStyles],
-  ['compare_components', tools.handleCompareComponents],
-  ['analyze_component_usage', tools.handleAnalyzeComponentUsage],
-  ['export_design_tokens', tools.handleExportDesignTokens],
+  ['get_component_props', tools.handleGetComponentProps],
+  ['get_component_dependencies', tools.handleGetComponentDependencies],
+  ['get_layout_components', tools.handleGetLayoutComponents],
+  ['get_theme_info', tools.handleGetThemeInfo],
+  ['get_component_by_purpose', tools.handleGetComponentByPurpose],
+  ['get_component_composition_examples', tools.handleGetComponentCompositionExamples],
 ]);
 
 const allTools = [
@@ -30,23 +32,25 @@ const allTools = [
   tools.getComponentHTMLTool,
   tools.getComponentVariantsTool,
   tools.searchComponentsTool,
-  tools.getComponentStylesTool,
-  tools.compareComponentsTool,
-  tools.analyzeComponentUsageTool,
-  tools.exportDesignTokensTool,
+  tools.getComponentPropsTool,
+  tools.getComponentDependenciesTool,
+  tools.getLayoutComponentsTool,
+  tools.getThemeInfoTool,
+  tools.getComponentByPurposeTool,
+  tools.getComponentCompositionExamplesTool,
 ];
 
 async function main() {
   try {
     const client = new StorybookClient();
     const isConnected = await client.testConnection();
-    
+
     if (!isConnected) {
       console.error(`❌ Unable to connect to Storybook at ${client.getStorybookUrl()}`);
       console.error('Make sure Storybook is running and accessible');
       process.exit(1);
     }
-    
+
     console.error(`✅ Connected to Storybook at ${client.getStorybookUrl()}`);
   } catch (error: any) {
     console.error('Connection Error:', error.message);
@@ -83,7 +87,7 @@ async function main() {
     try {
       return await handler(args);
     } catch (error: any) {
-      console.error(`Error executing tool ${name}:`, error);
+      // Re-throw error without logging to avoid interfering with JSON-RPC
       throw error;
     }
   });
@@ -102,7 +106,7 @@ async function main() {
   console.error('Storybook Design System Extractor MCP server running on stdio');
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error('Fatal error:', error);
   process.exit(1);
 });
