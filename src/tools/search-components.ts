@@ -7,7 +7,7 @@ import { ComponentInfo } from '../types/storybook.js';
 export const searchComponentsTool: Tool = {
   name: 'search_components',
   description:
-    'Search for components by name, title, or category using case-insensitive partial matching. Name is the component name only (e.g., "Button"), title is the full story path (e.g., "Components/Forms/Button"), category is the grouping (e.g., "Components/Forms"). Use "*" as query to list all components.',
+    'Search design system components by name, title, or category. Find UI components like modals, dialogs, popups, overlays, buttons, forms, cards, etc. Name is the component name only (e.g., "Modal", "Dialog"), title is the full story path (e.g., "Components/Overlays/Modal"), category is the grouping (e.g., "Components/Overlays"). Use "*" as query to list all components.',
   inputSchema: {
     type: 'object',
     properties: {

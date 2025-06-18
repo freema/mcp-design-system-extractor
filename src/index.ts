@@ -10,8 +10,6 @@ import {
   CallToolRequest,
 } from '@modelcontextprotocol/sdk/types.js';
 
-import { StorybookClient } from './utils/storybook-client.js';
-
 import * as tools from './tools/index.js';
 
 const toolHandlers = new Map<string, (input: any) => Promise<any>>([
@@ -41,26 +39,11 @@ const allTools = [
 ];
 
 async function main() {
-  try {
-    const client = new StorybookClient();
-    const isConnected = await client.testConnection();
-
-    if (!isConnected) {
-      console.error(`❌ Unable to connect to Storybook at ${client.getStorybookUrl()}`);
-      console.error('Make sure Storybook is running and accessible');
-      process.exit(1);
-    }
-
-    console.error(`✅ Connected to Storybook at ${client.getStorybookUrl()}`);
-  } catch (error: any) {
-    console.error('Connection Error:', error.message);
-    process.exit(1);
-  }
-
   const server = new Server(
     {
       name: 'design-system-extractor',
       version: '1.0.0',
+      description: 'Extract and use components from your Storybook design system. Find UI components like modals, dialogs, buttons, forms, and more. Helps integrate design system components into your projects.',
     },
     {
       capabilities: {

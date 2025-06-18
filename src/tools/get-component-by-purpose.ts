@@ -7,7 +7,7 @@ import { ComponentByPurpose, ComponentInfo } from '../types/storybook.js';
 export const getComponentByPurposeTool: Tool = {
   name: 'get_component_by_purpose',
   description:
-    'Search for components by their purpose. Available purposes: "form inputs" (input fields, selects, checkboxes), "navigation" (menus, breadcrumbs, tabs), "feedback" (alerts, toasts, modals), "data display" (tables, cards, lists), "layout" (grids, containers, dividers), "buttons" (all button types), "progress" (loaders, spinners), "media" (images, videos, carousels)',
+    'Find design system components by their purpose or use case. Available purposes: "form inputs" (input fields, selects, checkboxes), "navigation" (menus, breadcrumbs, tabs), "feedback" (alerts, toasts, modals, dialogs, popups), "data display" (tables, cards, lists), "layout" (grids, containers, dividers), "buttons" (all button types), "progress" (loaders, spinners), "media" (images, videos, carousels). Use this when looking for components to build specific UI features.',
   inputSchema: {
     type: 'object',
     properties: {

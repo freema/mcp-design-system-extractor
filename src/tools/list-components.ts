@@ -7,7 +7,7 @@ import { ComponentInfo } from '../types/storybook.js';
 export const listComponentsTool: Tool = {
   name: 'list_components',
   description:
-    'List all available components from the Storybook instance. Returns a list of components with their names, categories, and associated stories. Requires a running Storybook instance accessible via STORYBOOK_URL environment variable. Use category="all" or omit category parameter to list all components. To see available categories, call this tool first with no parameters.',
+    'List all UI components available in your design system/Storybook. Returns components like modals, dialogs, buttons, forms, cards, etc. with their names, categories, and stories. Use this to explore what components are available for building UI features. Use category="all" or omit category parameter to list all components.',
   inputSchema: {
     type: 'object',
     properties: {
