@@ -84,12 +84,7 @@ async function main() {
       throw new Error(`Unknown tool: ${name}`);
     }
 
-    try {
-      return await handler(args);
-    } catch (error: any) {
-      // Re-throw error without logging to avoid interfering with JSON-RPC
-      throw error;
-    }
+    return await handler(args);
   });
 
   server.setRequestHandler(ListResourcesRequestSchema, async () => {

@@ -65,8 +65,6 @@ export class StorybookClient {
               continue;
             }
 
-            const storiesData = data.stories || data.entries;
-
             this.setCache(cacheKey, data);
             return data as StorybookIndex;
           }
@@ -123,7 +121,7 @@ export class StorybookClient {
 
       // Check if content is already there (static HTML)
       const storyRoot = root.querySelector('#storybook-root') || root.querySelector('#root');
-      if (storyRoot && storyRoot.innerHTML.trim()) {
+      if (storyRoot?.innerHTML.trim()) {
         const componentHTML = storyRoot.innerHTML;
         const styles = this.extractStyles(root);
         const classes = this.extractClasses(componentHTML);
@@ -160,7 +158,7 @@ export class StorybookClient {
 
         for (const selector of selectors) {
           const element = window.document.querySelector(selector);
-          if (element && element.innerHTML.trim()) {
+          if (element?.innerHTML.trim()) {
             rootElement = element;
             break;
           }
@@ -172,7 +170,7 @@ export class StorybookClient {
 
           for (const selector of selectors) {
             const element = window.document.querySelector(selector);
-            if (element && element.innerHTML.trim()) {
+            if (element?.innerHTML.trim()) {
               rootElement = element;
               break;
             }

@@ -6,7 +6,8 @@ import { ComponentComposition, CompositionExample } from '../types/storybook.js'
 
 export const getComponentCompositionExamplesTool: Tool = {
   name: 'get_component_composition_examples',
-  description: 'Get examples of how components are combined together in real-world patterns and layouts. Returns HTML examples showing the component used with other components in forms, cards, layouts, or complex UI patterns from the Storybook stories',
+  description:
+    'Get examples of how components are combined together in real-world patterns and layouts. Returns HTML examples showing the component used with other components in forms, cards, layouts, or complex UI patterns from the Storybook stories',
   inputSchema: {
     type: 'object',
     properties: {

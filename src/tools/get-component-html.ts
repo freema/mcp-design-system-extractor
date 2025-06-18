@@ -6,17 +6,20 @@ import { ComponentHTML } from '../types/storybook.js';
 
 export const getComponentHTMLTool: Tool = {
   name: 'get_component_html',
-  description: 'Extract HTML from a specific component story in Storybook. Requires a story ID (format: "component-name--story-name", e.g., "button--primary", "forms-input--default"). Use list_components or get_component_variants first to find valid story IDs.',
+  description:
+    'Extract HTML from a specific component story in Storybook. Requires a story ID (format: "component-name--story-name", e.g., "button--primary", "forms-input--default"). Use list_components or get_component_variants first to find valid story IDs.',
   inputSchema: {
     type: 'object',
     properties: {
       componentId: {
         type: 'string',
-        description: 'The story ID in format "component-name--story-name" (e.g., "button--primary", "forms-input--default"). Get this from list_components or get_component_variants.',
+        description:
+          'The story ID in format "component-name--story-name" (e.g., "button--primary", "forms-input--default"). Get this from list_components or get_component_variants.',
       },
       includeStyles: {
         type: 'boolean',
-        description: 'Whether to include extracted CSS styles in the response (useful for understanding component styling)',
+        description:
+          'Whether to include extracted CSS styles in the response (useful for understanding component styling)',
       },
     },
     required: ['componentId'],

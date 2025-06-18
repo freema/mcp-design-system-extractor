@@ -6,18 +6,21 @@ import { ComponentInfo } from '../types/storybook.js';
 
 export const searchComponentsTool: Tool = {
   name: 'search_components',
-  description: 'Search for components by name, title, or category using case-insensitive partial matching. Name is the component name only (e.g., "Button"), title is the full story path (e.g., "Components/Forms/Button"), category is the grouping (e.g., "Components/Forms"). Use "*" as query to list all components.',
+  description:
+    'Search for components by name, title, or category using case-insensitive partial matching. Name is the component name only (e.g., "Button"), title is the full story path (e.g., "Components/Forms/Button"), category is the grouping (e.g., "Components/Forms"). Use "*" as query to list all components.',
   inputSchema: {
     type: 'object',
     properties: {
       query: {
         type: 'string',
-        description: 'The search query to match (e.g., "button", "form", "nav"). Use "*" to list all components. Case-insensitive partial matching.',
+        description:
+          'The search query to match (e.g., "button", "form", "nav"). Use "*" to list all components. Case-insensitive partial matching.',
       },
       searchIn: {
         type: 'string',
         enum: ['name', 'title', 'category', 'all'],
-        description: 'Where to search: "name" (component name only), "title" (full path), "category" (grouping), or "all" (search everywhere, default)',
+        description:
+          'Where to search: "name" (component name only), "title" (full path), "category" (grouping), or "all" (search everywhere, default)',
       },
     },
     required: ['query'],
@@ -30,7 +33,7 @@ export async function handleSearchComponents(input: any) {
     const client = new StorybookClient();
     const searchIn = validatedInput.searchIn || 'all';
     const query = validatedInput.query.toLowerCase();
-    
+
     // Handle wildcard queries - if query is just "*" or empty, match everything
     const isWildcard = query === '*' || query === '' || query === '.*';
 
@@ -57,7 +60,8 @@ export async function handleSearchComponents(input: any) {
           break;
         case 'all':
         default:
-          matches = isWildcard ||
+          matches =
+            isWildcard ||
             componentName.toLowerCase().includes(query) ||
             story.title.toLowerCase().includes(query) ||
             Boolean(category && category.toLowerCase().includes(query));

@@ -6,7 +6,8 @@ import { ComponentDependencies } from '../types/storybook.js';
 
 export const getComponentDependenciesTool: Tool = {
   name: 'get_component_dependencies',
-  description: 'Analyze rendered HTML to find which other components a given component internally uses by detecting React components, web components, and CSS class patterns',
+  description:
+    'Analyze rendered HTML to find which other components a given component internally uses by detecting React components, web components, and CSS class patterns',
   inputSchema: {
     type: 'object',
     properties: {

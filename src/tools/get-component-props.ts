@@ -7,7 +7,7 @@ import { ComponentProps, PropDefinition } from '../types/storybook.js';
 export const getComponentPropsTool: Tool = {
   name: 'get_component_props',
   description:
-    'Extract component props/API documentation from Storybook\'s argTypes configuration, including prop names, types, default values, required status, and control options',
+    "Extract component props/API documentation from Storybook's argTypes configuration, including prop names, types, default values, required status, and control options",
   inputSchema: {
     type: 'object',
     properties: {

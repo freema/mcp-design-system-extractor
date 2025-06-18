@@ -6,13 +6,15 @@ import { ComponentVariant } from '../types/storybook.js';
 
 export const getComponentVariantsTool: Tool = {
   name: 'get_component_variants',
-  description: 'Get all story variants/states for a specific component. Returns all stories (variants) for a component with their IDs, names, and parameters. Component name should match exactly as shown in list_components (case-sensitive).',
+  description:
+    'Get all story variants/states for a specific component. Returns all stories (variants) for a component with their IDs, names, and parameters. Component name should match exactly as shown in list_components (case-sensitive).',
   inputSchema: {
     type: 'object',
     properties: {
       componentName: {
         type: 'string',
-        description: 'Exact name of the component as returned by list_components (e.g., "Button", "Input", "Card"). Case-sensitive matching.',
+        description:
+          'Exact name of the component as returned by list_components (e.g., "Button", "Input", "Card"). Case-sensitive matching.',
       },
     },
     required: ['componentName'],
