@@ -70,6 +70,42 @@ npm run setup
 }
 ```
 
+### With Claude Code
+
+For development with Claude Code, add to your `.claude_code_config.json` in the project root:
+
+```json
+{
+  "mcpServers": {
+    "design-system-extractor": {
+      "command": "npm",
+      "args": ["run", "dev"],
+      "env": {
+        "STORYBOOK_URL": "http://localhost:6006"
+      }
+    }
+  }
+}
+```
+
+Or for production build:
+
+```json
+{
+  "mcpServers": {
+    "design-system-extractor": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "STORYBOOK_URL": "http://localhost:6006"
+      }
+    }
+  }
+}
+```
+
+Then restart Claude Code to load the MCP server. You can verify it's working by using any of the design system tools in your Claude Code session.
+
 ### Development
 
 ```bash

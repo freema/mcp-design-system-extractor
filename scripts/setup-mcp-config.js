@@ -185,10 +185,11 @@ async function main() {
 
   console.log(`\n${colors.bright}Configuration Options:${colors.reset}`);
   console.log('1. Save to Claude Desktop config');
-  console.log('2. Display config (copy manually)');
-  console.log('3. Save to custom file');
+  console.log('2. Save to Claude Code config (.claude_code_config.json)');
+  console.log('3. Display config (copy manually)');
+  console.log('4. Save to custom file');
   
-  const choice = await question('\nSelect option (1-3): ');
+  const choice = await question('\nSelect option (1-4): ');
 
   switch (choice) {
     case '1':
@@ -226,11 +227,50 @@ async function main() {
       break;
 
     case '2':
-      console.log(`\n${colors.bright}Copy this configuration to your Claude Desktop config:${colors.reset}\n`);
-      console.log(JSON.stringify(mcpConfig, null, 2));
+      const claudeCodeConfigPath = path.join(projectPath, '.claude_code_config.json');
+      let existingClaudeCodeConfig = {};
+      
+      if (fs.existsSync(claudeCodeConfigPath)) {
+        try {
+          existingClaudeCodeConfig = JSON.parse(fs.readFileSync(claudeCodeConfigPath, 'utf8'));
+          if (existingClaudeCodeConfig.mcpServers && existingClaudeCodeConfig.mcpServers['design-system-extractor']) {
+            const overwrite = await question(`\n${colors.yellow}⚠️  'design-system-extractor' server already exists in Claude Code config. Overwrite? (y/n): ${colors.reset}`);
+            if (overwrite.toLowerCase() !== 'y') {
+              console.log('Cancelled.');
+              process.exit(0);
+            }
+          }
+        } catch (error) {
+          console.log(`${colors.yellow}⚠️  Could not read existing Claude Code config, will create new one${colors.reset}`);
+        }
+      }
+
+      // For Claude Code, use relative paths and npm run dev for development
+      const claudeCodeConfig = {
+        ...existingClaudeCodeConfig,
+        mcpServers: {
+          ...existingClaudeCodeConfig.mcpServers,
+          "design-system-extractor": {
+            command: "npm",
+            args: ["run", "dev"],
+            env: {
+              STORYBOOK_URL: storybookUrl
+            }
+          }
+        }
+      };
+
+      fs.writeFileSync(claudeCodeConfigPath, JSON.stringify(claudeCodeConfig, null, 2));
+      console.log(`\n${colors.green}✅ Configuration saved to: ${claudeCodeConfigPath}${colors.reset}`);
+      console.log(`\n${colors.yellow}⚠️  Restart Claude Code to apply changes${colors.reset}`);
       break;
 
     case '3':
+      console.log(`\n${colors.bright}Copy this configuration to your config file:${colors.reset}\n`);
+      console.log(JSON.stringify(mcpConfig, null, 2));
+      break;
+
+    case '4':
       const customPath = await question('Enter file path: ');
       fs.writeFileSync(customPath, JSON.stringify(mcpConfig, null, 2));
       console.log(`\n${colors.green}✅ Configuration saved to: ${customPath}${colors.reset}`);
@@ -242,7 +282,11 @@ async function main() {
 
   console.log(`\n${colors.bright}${colors.blue}Next Steps:${colors.reset}`);
   console.log(`1. Ensure Storybook is running at: ${colors.green}${storybookUrl}${colors.reset}`);
-  console.log(`2. Restart Claude Desktop`);
+  if (choice === '1') {
+    console.log(`2. Restart Claude Desktop`);
+  } else if (choice === '2') {
+    console.log(`2. Restart Claude Code`);
+  }
   console.log(`3. Test with: "List all components from the design system"`);
   console.log(`4. Or try: "Get HTML for a button component"`);
 

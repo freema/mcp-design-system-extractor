@@ -1,11 +1,12 @@
 import { parse } from 'node-html-parser';
-import { Window } from 'happy-dom';
 import { StorybookIndex, ComponentHTML } from '../types/storybook.js';
+import { Cache } from './cache.js';
+import { PuppeteerClient } from './puppeteer-client.js';
 
 export class StorybookClient {
   private baseUrl: string;
-  private cache: Map<string, { data: any; timestamp: number }>;
-  private cacheDuration = 300000; // 5 minutes cache duration
+  private cache: Cache;
+  private puppeteerClient: PuppeteerClient | null = null;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || process.env.STORYBOOK_URL || 'http://localhost:6006';
@@ -25,82 +26,98 @@ export class StorybookClient {
     this.baseUrl = this.baseUrl.replace(/\/$/, '');
 
     // Initialize cache
-    this.cache = new Map();
+    this.cache = new Cache(300000); // 5 minutes
+  }
+
+  getStorybookUrl(): string {
+    return this.baseUrl;
+  }
+
+  private async getPuppeteerClient(): Promise<PuppeteerClient> {
+    if (!this.puppeteerClient) {
+      this.puppeteerClient = new PuppeteerClient();
+      await this.puppeteerClient.launch();
+    }
+    return this.puppeteerClient;
+  }
+
+  async close(): Promise<void> {
+    if (this.puppeteerClient) {
+      await this.puppeteerClient.close();
+      this.puppeteerClient = null;
+    }
   }
 
   async fetchStoriesIndex(): Promise<StorybookIndex> {
     const cacheKey = 'stories-index';
-    const cached = this.getFromCache(cacheKey);
+    const cached = this.cache.get<StorybookIndex>(cacheKey);
     if (cached) {
       return cached;
     }
 
-    const urls = ['/index.json', '/stories.json'];
-    const maxRetries = 3;
-    const retryDelay = 1000; // 1 second
+    const urls = [`${this.baseUrl}/index.json`, `${this.baseUrl}/stories.json`];
+    let lastError: Error | null = null;
 
     for (const url of urls) {
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
 
-          const response = await fetch(`${this.baseUrl}${url}`, {
-            signal: controller.signal,
-          });
+        const response = await fetch(url, {
+          signal: controller.signal,
+        });
 
-          clearTimeout(timeout);
+        clearTimeout(timeout);
 
-          if (response.ok) {
-            const text = await response.text();
+        if (response.ok) {
+          const data = (await response.json()) as StorybookIndex;
+          this.cache.set(cacheKey, data);
+          return data;
+        }
 
-            if (!text || text.trim() === '') {
-              continue;
-            }
-
-            let data;
-            try {
-              data = JSON.parse(text);
-            } catch (parseError) {
-              continue;
-            }
-
-            this.setCache(cacheKey, data);
-            return data as StorybookIndex;
-          }
-        } catch (error: any) {
-          // Skip error logging to avoid interfering with JSON-RPC
-
-          if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-          }
+        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          lastError = new Error(`Request timeout while fetching ${url}`);
+        } else {
+          lastError = error;
         }
       }
     }
 
     throw new Error(
-      `Could not fetch stories index from ${this.baseUrl}.\n` +
-        `Tried: ${urls.join(', ')}\n\n` +
-        `Possible solutions:\n` +
-        `1. Make sure Storybook is running (typically on port 6006)\n` +
-        `2. Check if the URL is correct: ${this.baseUrl}\n` +
-        `3. Verify that CORS is properly configured in your Storybook\n` +
+      `Failed to fetch Storybook index from ${this.baseUrl}. ${lastError?.message || 'Unknown error'}\n` +
+        `Troubleshooting:\n` +
+        `1. Make sure Storybook is running\n` +
+        `2. Verify the URL is correct: ${this.baseUrl}\n` +
+        `3. Check if CORS is properly configured\n` +
         `4. Try accessing ${this.baseUrl}/index.json directly in your browser`
     );
   }
 
   async fetchComponentHTML(storyId: string): Promise<ComponentHTML> {
     const cacheKey = `component-html-${storyId}`;
-    const cached = this.getFromCache(cacheKey);
+    const cached = this.cache.get<ComponentHTML>(cacheKey);
     if (cached) {
       return cached;
     }
 
     try {
+      // First, validate that the story ID exists in the stories index
+      const storiesIndex = await this.fetchStoriesIndex();
+      const stories = storiesIndex.stories || storiesIndex.entries || {};
+
+      if (!stories[storyId]) {
+        throw new Error(
+          `Story ID "${storyId}" not found in Storybook. Please check the ID is correct. Available stories can be found using list_components or get_component_variants tools.`
+        );
+      }
+
       const url = `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`;
 
+      // Try static HTML parsing first (faster)
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeout = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(url, {
         signal: controller.signal,
@@ -116,12 +133,16 @@ export class StorybookClient {
 
       const html = await response.text();
 
-      // Parse with node-html-parser first to check content
+      // Parse with node-html-parser first to check for static content
       const root = parse(html);
+      const storyRoot = root.querySelector('#storybook-root');
 
-      // Check if content is already there (static HTML)
-      const storyRoot = root.querySelector('#storybook-root') || root.querySelector('#root');
-      if (storyRoot?.innerHTML.trim()) {
+      if (
+        storyRoot?.innerHTML.trim() &&
+        !storyRoot.innerHTML.includes('sb-nopreview') &&
+        !storyRoot.innerHTML.includes('No Preview')
+      ) {
+        // Static content found, use it
         const componentHTML = storyRoot.innerHTML;
         const styles = this.extractStyles(root);
         const classes = this.extractClasses(componentHTML);
@@ -132,84 +153,16 @@ export class StorybookClient {
           styles,
           classes,
         };
-        this.setCache(cacheKey, result);
+        this.cache.set(cacheKey, result);
         return result;
       }
 
-      // If no static content, use Happy-DOM for dynamic content
-      const window = new Window({
-        url,
-        settings: {
-          enableFileSystemHttpRequests: false,
-          disableJavaScriptFileLoading: false,
-          disableJavaScriptEvaluation: false,
-        },
-      });
+      // Static content not available, use Puppeteer for dynamic rendering
+      const puppeteerClient = await this.getPuppeteerClient();
+      const result = await puppeteerClient.fetchComponentHTML(url, storyId);
 
-      try {
-        window.document.write(html);
-
-        // Wait for scripts to load and execute
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Try to find the story content
-        const selectors = ['#storybook-root', '#storybook-docs', '#root'];
-        let rootElement = null;
-
-        for (const selector of selectors) {
-          const element = window.document.querySelector(selector);
-          if (element?.innerHTML.trim()) {
-            rootElement = element;
-            break;
-          }
-        }
-
-        if (!rootElement?.innerHTML.trim()) {
-          // One more short wait
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          for (const selector of selectors) {
-            const element = window.document.querySelector(selector);
-            if (element?.innerHTML.trim()) {
-              rootElement = element;
-              break;
-            }
-          }
-        }
-
-        if (!rootElement?.innerHTML.trim()) {
-          throw new Error(`Could not find story content for ${storyId}`);
-        }
-
-        // Extract styles
-        const styles: string[] = [];
-        window.document.querySelectorAll('style').forEach((style: any) => {
-          if (style.textContent) {
-            styles.push(style.textContent);
-          }
-        });
-
-        window.document.querySelectorAll('link[rel="stylesheet"]').forEach((link: any) => {
-          const href = link.getAttribute('href');
-          if (href) {
-            styles.push(`/* External stylesheet: ${href} */`);
-          }
-        });
-
-        const componentHTML = rootElement.innerHTML;
-        const classes = this.extractClasses(componentHTML);
-
-        const result = {
-          storyId,
-          html: componentHTML,
-          styles,
-          classes,
-        };
-        this.setCache(cacheKey, result);
-        return result;
-      } finally {
-        window.close();
-      }
+      this.cache.set(cacheKey, result);
+      return result;
     } catch (error: any) {
       if (error.name === 'AbortError') {
         throw new Error(`Request timeout while fetching component HTML for ${storyId}`);
@@ -229,22 +182,18 @@ export class StorybookClient {
     }
   }
 
-  getStorybookUrl(): string {
-    return this.baseUrl;
-  }
-
   private extractStyles(root: any): string[] {
     const styles: string[] = [];
 
-    const styleElements = root.querySelectorAll('style');
-    styleElements.forEach((style: any) => {
-      if (style.innerHTML?.trim()) {
-        styles.push(style.innerHTML.trim());
+    // Extract inline styles
+    root.querySelectorAll('style').forEach((style: any) => {
+      if (style.text) {
+        styles.push(style.text);
       }
     });
 
-    const linkElements = root.querySelectorAll('link[rel="stylesheet"]');
-    linkElements.forEach((link: any) => {
+    // Add external stylesheet references
+    root.querySelectorAll('link[rel="stylesheet"]').forEach((link: any) => {
       const href = link.getAttribute('href');
       if (href) {
         styles.push(`/* External stylesheet: ${href} */`);
@@ -255,30 +204,21 @@ export class StorybookClient {
   }
 
   private extractClasses(html: string): string[] {
-    const classRegex = /class="([^"]*)"/g;
+    const classRegex = /class=["']([^"']+)["']/g;
     const classes = new Set<string>();
-
     let match;
+
     while ((match = classRegex.exec(html)) !== null) {
       if (match[1]) {
-        const classNames = match[1].split(/\s+/).filter(Boolean);
-        classNames.forEach(className => classes.add(className));
+        const classList = match[1].split(/\s+/);
+        classList.forEach(cls => {
+          if (cls.trim()) {
+            classes.add(cls.trim());
+          }
+        });
       }
     }
 
-    return Array.from(classes).sort();
-  }
-
-  private getFromCache(key: string): any {
-    const cached = this.cache.get(key);
-    if (cached && Date.now() - cached.timestamp < this.cacheDuration) {
-      return cached.data;
-    }
-    this.cache.delete(key); // Remove expired cache
-    return null;
-  }
-
-  private setCache(key: string, data: any): void {
-    this.cache.set(key, { data, timestamp: Date.now() });
+    return Array.from(classes);
   }
 }

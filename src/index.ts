@@ -17,12 +17,9 @@ const toolHandlers = new Map<string, (input: any) => Promise<any>>([
   ['get_component_html', tools.handleGetComponentHTML],
   ['get_component_variants', tools.handleGetComponentVariants],
   ['search_components', tools.handleSearchComponents],
-  ['get_component_props', tools.handleGetComponentProps],
   ['get_component_dependencies', tools.handleGetComponentDependencies],
-  ['get_layout_components', tools.handleGetLayoutComponents],
   ['get_theme_info', tools.handleGetThemeInfo],
   ['get_component_by_purpose', tools.handleGetComponentByPurpose],
-  ['get_component_composition_examples', tools.handleGetComponentCompositionExamples],
 ]);
 
 const allTools = [
@@ -30,12 +27,9 @@ const allTools = [
   tools.getComponentHTMLTool,
   tools.getComponentVariantsTool,
   tools.searchComponentsTool,
-  tools.getComponentPropsTool,
   tools.getComponentDependenciesTool,
-  tools.getLayoutComponentsTool,
   tools.getThemeInfoTool,
   tools.getComponentByPurposeTool,
-  tools.getComponentCompositionExamplesTool,
 ];
 
 async function main() {
@@ -43,7 +37,8 @@ async function main() {
     {
       name: 'design-system-extractor',
       version: '1.0.0',
-      description: 'Extract and use components from your Storybook design system. Find UI components like modals, dialogs, buttons, forms, and more. Helps integrate design system components into your projects.',
+      description:
+        'Extract and use components from your Storybook design system. Find UI components like modals, dialogs, buttons, forms, and more. Helps integrate design system components into your projects.',
     },
     {
       capabilities: {
