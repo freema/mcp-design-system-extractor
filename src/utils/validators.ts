@@ -14,6 +14,8 @@ import {
 
 const ListComponentsInputSchema = z.object({
   category: z.string().optional(),
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
 });
 
 const GetComponentHTMLInputSchema = z.object({
@@ -28,6 +30,8 @@ const GetComponentVariantsInputSchema = z.object({
 const SearchComponentsInputSchema = z.object({
   query: z.string(),
   searchIn: z.enum(['name', 'title', 'category', 'all']).optional(),
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
 });
 
 const GetComponentPropsInputSchema = z.object({
@@ -48,6 +52,8 @@ const GetThemeInfoInputSchema = z.object({
 
 const GetComponentByPurposeInputSchema = z.object({
   purpose: z.string(),
+  page: z.number().int().positive().optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
 });
 
 const GetComponentCompositionExamplesInputSchema = z.object({
@@ -60,6 +66,12 @@ export function validateListComponentsInput(input: any): ListComponentsInput {
   const result: ListComponentsInput = {};
   if (parsed.category !== undefined) {
     result.category = parsed.category;
+  }
+  if (parsed.page !== undefined) {
+    result.page = parsed.page;
+  }
+  if (parsed.pageSize !== undefined) {
+    result.pageSize = parsed.pageSize;
   }
   return result;
 }
@@ -86,6 +98,12 @@ export function validateSearchComponentsInput(input: any): SearchComponentsInput
   };
   if (parsed.searchIn !== undefined) {
     result.searchIn = parsed.searchIn;
+  }
+  if (parsed.page !== undefined) {
+    result.page = parsed.page;
+  }
+  if (parsed.pageSize !== undefined) {
+    result.pageSize = parsed.pageSize;
   }
   return result;
 }
@@ -117,7 +135,17 @@ export function validateGetThemeInfoInput(input: any): GetThemeInfoInput {
 }
 
 export function validateGetComponentByPurposeInput(input: any): GetComponentByPurposeInput {
-  return GetComponentByPurposeInputSchema.parse(input);
+  const parsed = GetComponentByPurposeInputSchema.parse(input);
+  const result: GetComponentByPurposeInput = {
+    purpose: parsed.purpose,
+  };
+  if (parsed.page !== undefined) {
+    result.page = parsed.page;
+  }
+  if (parsed.pageSize !== undefined) {
+    result.pageSize = parsed.pageSize;
+  }
+  return result;
 }
 
 export function validateGetComponentCompositionExamplesInput(

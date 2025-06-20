@@ -7,7 +7,7 @@ import { ComponentInfo } from '../types/storybook.js';
 export const searchComponentsTool: Tool = {
   name: 'search_components',
   description:
-    'Search design system components by name, title, or category. Find UI components like modals, dialogs, popups, overlays, buttons, forms, cards, etc. Name is the component name only (e.g., "Modal", "Dialog"), title is the full story path (e.g., "Components/Overlays/Modal"), category is the grouping (e.g., "Components/Overlays"). Use "*" as query to list all components.',
+    'Search design system components by name, title, or category. Find UI components like modals, dialogs, popups, overlays, buttons, forms, cards, etc. Name is the component name only (e.g., "Modal", "Dialog"), title is the full story path (e.g., "Components/Overlays/Modal"), category is the grouping (e.g., "Components/Overlays"). Use "*" as query to list all components. Supports pagination for large result sets.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -21,6 +21,14 @@ export const searchComponentsTool: Tool = {
         enum: ['name', 'title', 'category', 'all'],
         description:
           'Where to search: "name" (component name only), "title" (full path), "category" (grouping), or "all" (search everywhere, default)',
+      },
+      page: {
+        type: 'number',
+        description: 'Page number (1-based). Default is 1.',
+      },
+      pageSize: {
+        type: 'number',
+        description: 'Number of components per page (1-100). Default is 50.',
       },
     },
     required: ['query'],
@@ -88,11 +96,30 @@ export async function handleSearchComponents(input: any) {
       }
     });
 
-    const results = Array.from(componentMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const allResults = Array.from(componentMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    // Apply pagination
+    const page = validatedInput.page || 1;
+    const pageSize = validatedInput.pageSize || 50;
+    const totalResults = allResults.length;
+    const totalPages = Math.ceil(totalResults / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalResults);
+
+    // Validate page number
+    if (page > totalPages && totalResults > 0) {
+      throw new Error(
+        `Page ${page} exceeds total pages (${totalPages}). Please use a page number between 1 and ${totalPages}.`
+      );
+    }
+
+    const results = allResults.slice(startIndex, endIndex);
 
     return formatSuccessResponse(
       results,
-      `Found ${results.length} components matching "${validatedInput.query}" (searched in: ${searchIn}, processed ${Object.keys(storiesIndex.stories || storiesIndex.entries || {}).length} stories, wildcard: ${isWildcard})`
+      `Found ${totalResults} components matching "${validatedInput.query}" (showing page ${page}/${totalPages}, ${results.length} items, searched in: ${searchIn})`
     );
   } catch (error) {
     return handleError(error);

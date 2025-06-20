@@ -7,7 +7,7 @@ import { ComponentByPurpose, ComponentInfo } from '../types/storybook.js';
 export const getComponentByPurposeTool: Tool = {
   name: 'get_component_by_purpose',
   description:
-    'Find design system components by their purpose or use case. Available purposes: "form inputs" (input fields, selects, checkboxes), "navigation" (menus, breadcrumbs, tabs), "feedback" (alerts, toasts, modals, dialogs, popups), "data display" (tables, cards, lists), "layout" (grids, containers, dividers), "buttons" (all button types), "progress" (loaders, spinners), "media" (images, videos, carousels). Use this when looking for components to build specific UI features.',
+    'Find design system components by their purpose or use case. Available purposes: "form inputs" (input fields, selects, checkboxes), "navigation" (menus, breadcrumbs, tabs), "feedback" (alerts, toasts, modals, dialogs, popups), "data display" (tables, cards, lists), "layout" (grids, containers, dividers), "buttons" (all button types), "progress" (loaders, spinners), "media" (images, videos, carousels). Use this when looking for components to build specific UI features. Supports pagination for large result sets.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -15,6 +15,14 @@ export const getComponentByPurposeTool: Tool = {
         type: 'string',
         description:
           'The purpose to search for (e.g., "form inputs", "navigation", "feedback", "data display")',
+      },
+      page: {
+        type: 'number',
+        description: 'Page number (1-based). Default is 1.',
+      },
+      pageSize: {
+        type: 'number',
+        description: 'Number of components per page (1-100). Default is 50.',
       },
     },
     required: ['purpose'],
@@ -208,10 +216,27 @@ export async function handleGetComponentByPurpose(input: any) {
       }
     }
 
-    const components = Array.from(componentMap.values());
+    const allComponents = Array.from(componentMap.values());
 
     // Sort components by name
-    components.sort((a, b) => a.name.localeCompare(b.name));
+    allComponents.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Apply pagination
+    const page = validatedInput.page || 1;
+    const pageSize = validatedInput.pageSize || 50;
+    const totalComponents = allComponents.length;
+    const totalPages = Math.ceil(totalComponents / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalComponents);
+
+    // Validate page number
+    if (page > totalPages && totalComponents > 0) {
+      throw new Error(
+        `Page ${page} exceeds total pages (${totalPages}). Please use a page number between 1 and ${totalPages}.`
+      );
+    }
+
+    const components = allComponents.slice(startIndex, endIndex);
 
     const result: ComponentByPurpose = {
       purpose: validatedInput.purpose,
@@ -221,7 +246,7 @@ export async function handleGetComponentByPurpose(input: any) {
 
     return formatSuccessResponse(
       result,
-      `Found ${components.length} components for purpose: ${validatedInput.purpose}`
+      `Found ${totalComponents} components for purpose: ${validatedInput.purpose} (showing page ${page}/${totalPages}, ${components.length} items)`
     );
   } catch (error) {
     return handleError(error);

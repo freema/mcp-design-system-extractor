@@ -7,7 +7,7 @@ import { ComponentInfo } from '../types/storybook.js';
 export const listComponentsTool: Tool = {
   name: 'list_components',
   description:
-    'List all UI components available in your design system/Storybook. Returns components like modals, dialogs, buttons, forms, cards, etc. with their names, categories, and stories. Use this to explore what components are available for building UI features. Use category="all" or omit category parameter to list all components.',
+    'List all UI components available in your design system/Storybook. Returns components like modals, dialogs, buttons, forms, cards, etc. with their names, categories, and stories. Use this to explore what components are available for building UI features. Use category="all" or omit category parameter to list all components. Supports pagination to handle large component libraries.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -15,6 +15,14 @@ export const listComponentsTool: Tool = {
         type: 'string',
         description:
           'Filter components by category path (e.g., "Components/Buttons", "Layout"). Use "all" or omit to list all components.',
+      },
+      page: {
+        type: 'number',
+        description: 'Page number (1-based). Default is 1.',
+      },
+      pageSize: {
+        type: 'number',
+        description: 'Number of components per page (1-100). Default is 50.',
       },
     },
     required: [],
@@ -85,13 +93,30 @@ export async function handleListComponents(input: any) {
       componentMap.get(componentName)!.stories.push(story);
     });
 
-    const components = Array.from(componentMap.values()).sort((a, b) =>
+    const allComponents = Array.from(componentMap.values()).sort((a, b) =>
       a.name.localeCompare(b.name)
     );
 
+    // Apply pagination
+    const page = validatedInput.page || 1;
+    const pageSize = validatedInput.pageSize || 50;
+    const totalComponents = allComponents.length;
+    const totalPages = Math.ceil(totalComponents / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalComponents);
+
+    // Validate page number
+    if (page > totalPages && totalComponents > 0) {
+      throw new Error(
+        `Page ${page} exceeds total pages (${totalPages}). Please use a page number between 1 and ${totalPages}.`
+      );
+    }
+
+    const components = allComponents.slice(startIndex, endIndex);
+
     return formatSuccessResponse(
       components,
-      `Found ${components.length} components (processed ${stories.length} stories, filter: ${validatedInput.category || 'none'})`
+      `Found ${totalComponents} components (showing page ${page}/${totalPages}, ${components.length} items, filter: ${validatedInput.category || 'none'})`
     );
   } catch (error) {
     return handleError(error);
