@@ -13,6 +13,7 @@ A Model Context Protocol (MCP) server that extracts component information from S
 - 🎨 **Theme Information**: Extract design system theme (colors, spacing, typography, breakpoints)
 - 🎯 **Search by Purpose**: Find components by their purpose (form inputs, navigation, feedback)
 - 🧩 **Composition Examples**: Get examples of how components are combined together
+- 📝 **External CSS Analysis**: Fetch and analyze CSS files to extract design tokens and variables
 
 ## Installation
 
@@ -125,6 +126,7 @@ npm run inspector:dev
    - Returns components with their names, categories, and associated stories
    - Use `category: "all"` or omit category parameter to list all components
    - Filter by specific category path (e.g., "Components/Buttons", "Layout")
+   - Supports pagination with `page` and `pageSize` parameters (default: 50 per page)
 
 2. **get_component_html**
    - Extracts HTML from a specific component story in Storybook
@@ -145,6 +147,7 @@ npm run inspector:dev
    - Category is the grouping (e.g., "Components/Forms")
    - Use `query: "*"` to list all components
    - Search in specific fields: "name", "title", "category", or "all" (default)
+   - Supports pagination with `page` and `pageSize` parameters (default: 50 per page)
 
 ### Component Analysis Tools
 
@@ -178,12 +181,21 @@ npm run inspector:dev
    - Search for components by their purpose or function
    - Available purposes: "form inputs" (input fields, selects, checkboxes), "navigation" (menus, breadcrumbs, tabs), "feedback" (alerts, toasts, modals), "data display" (tables, cards, lists), "layout" (grids, containers, dividers), "buttons" (all button types), "progress" (loaders, spinners), "media" (images, videos, carousels)
    - Flexible pattern matching for finding components by use case
+   - Supports pagination with `page` and `pageSize` parameters (default: 50 per page)
 
 10. **get_component_composition_examples**
     - Gets examples of how components are combined together in real-world patterns and layouts
     - Returns HTML examples showing the component used with other components in forms, cards, layouts, or complex UI patterns
     - Helps understand how components work together in practice
     - Optional limit parameter to control number of examples returned
+
+11. **get_external_css** ⚠️ **TOKEN-OPTIMIZED**
+    - **DEFAULT**: Returns ONLY design tokens + file stats (avoids token limits)
+    - **Does NOT return CSS content** by default (prevents 25K token limit errors)
+    - Extracts & categorizes tokens: colors, spacing, typography, shadows, breakpoints
+    - Use `includeFullCSS: true` only when you specifically need CSS content
+    - Security-protected: only accepts URLs from the same domain as your Storybook
+    - **Perfect for design token extraction without hitting response size limits**
 
 ## Example Usage
 
@@ -236,6 +248,26 @@ await getComponentCompositionExamples({
   componentId: "button--primary",
   limit: 3
 });
+
+// RECOMMENDED: Extract design tokens only (small response, avoids token limits)
+await getExternalCSS({
+  cssUrl: "https://my-storybook.com/assets/main.css"
+  // extractTokens: true (default), includeFullCSS: false (default)
+});
+
+// ONLY when you specifically need CSS content (may hit token limits)
+await getExternalCSS({
+  cssUrl: "./assets/tokens.css",
+  includeFullCSS: true,
+  maxContentSize: 10000
+});
+
+// Search with pagination
+await searchComponents({
+  query: "button",
+  page: 1,
+  pageSize: 10
+});
 ```
 
 ### AI Assistant Usage Tips
@@ -267,6 +299,7 @@ It extracts:
 - Component props and API documentation
 - Component dependencies and relationships
 - Design system tokens and theme information
+- External CSS files and design tokens from Storybook assets
 
 ## Troubleshooting
 

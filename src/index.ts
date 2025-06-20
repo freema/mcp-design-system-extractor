@@ -20,6 +20,7 @@ const toolHandlers = new Map<string, (input: any) => Promise<any>>([
   ['get_component_dependencies', tools.handleGetComponentDependencies],
   ['get_theme_info', tools.handleGetThemeInfo],
   ['get_component_by_purpose', tools.handleGetComponentByPurpose],
+  ['get_external_css', tools.handleGetExternalCSS],
 ]);
 
 const allTools = [
@@ -30,6 +31,7 @@ const allTools = [
   tools.getComponentDependenciesTool,
   tools.getThemeInfoTool,
   tools.getComponentByPurposeTool,
+  tools.getExternalCSSTool,
 ];
 
 async function main() {

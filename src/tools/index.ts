@@ -11,3 +11,4 @@ export {
   getComponentByPurposeTool,
   handleGetComponentByPurpose,
 } from './get-component-by-purpose.js';
+export { getExternalCSSTool, handleGetExternalCSS } from './get-external-css.js';
