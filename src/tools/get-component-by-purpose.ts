@@ -2,8 +2,9 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
 import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
 import { validateGetComponentByPurposeInput } from '../utils/validators.js';
-import { ComponentByPurpose, ComponentInfo } from '../types/storybook.js';
+import { ComponentByPurpose } from '../types/storybook.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
+import { mapStoriesToComponents, getComponentsArray } from '../utils/story-mapper.js';
 
 export const getComponentByPurposeTool: Tool = {
   name: 'get_component_by_purpose',
@@ -183,44 +184,22 @@ export async function handleGetComponentByPurpose(input: any) {
       description = `Components related to ${validatedInput.purpose}`;
     }
 
-    // Group stories by component
-    const componentMap = new Map<string, ComponentInfo>();
-
-    for (const [storyId, story] of Object.entries(stories)) {
+    // Create filter function for purpose matching
+    const filterFn = (story: any, componentName: string) => {
       const componentTitle = story.title || '';
       const storyName = story.name || story.story || '';
-      const componentName = componentTitle.split('/').pop() || componentTitle;
-
-      // Check if this component matches the purpose
-      const matches = patterns.some(
+      
+      return patterns.some(
         pattern =>
           pattern.test(componentTitle) || pattern.test(storyName) || pattern.test(componentName)
       );
+    };
 
-      if (matches) {
-        const componentKey = componentTitle.toLowerCase();
-
-        if (!componentMap.has(componentKey)) {
-          const componentInfo: ComponentInfo = {
-            id: storyId.split('--')[0] || storyId,
-            name: componentName || 'Unknown',
-            title: componentTitle || 'Unknown',
-            category:
-              (componentTitle?.includes('/') ? componentTitle.split('/')[0] : 'components') ||
-              'components',
-            stories: [],
-          };
-          componentMap.set(componentKey, componentInfo);
-        }
-
-        componentMap.get(componentKey)!.stories.push(story);
-      }
-    }
-
-    const allComponents = Array.from(componentMap.values());
-
-    // Sort components by name
-    allComponents.sort((a, b) => a.name.localeCompare(b.name));
+    const componentMap = mapStoriesToComponents(stories, { 
+      filterFn,
+      useComponentKey: 'title'
+    });
+    const allComponents = getComponentsArray(componentMap);
 
     // Apply pagination
     const paginationResult = applyPagination(allComponents, {

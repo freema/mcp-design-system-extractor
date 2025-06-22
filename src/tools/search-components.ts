@@ -2,8 +2,8 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
 import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
 import { validateSearchComponentsInput } from '../utils/validators.js';
-import { ComponentInfo } from '../types/storybook.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
+import { mapStoriesToComponents, getComponentsArray } from '../utils/story-mapper.js';
 
 export const searchComponentsTool: Tool = {
   name: 'search_components',
@@ -47,59 +47,34 @@ export async function handleSearchComponents(input: any) {
     const isWildcard = query === '*' || query === '' || query === '.*';
 
     const storiesIndex = await client.fetchStoriesIndex();
-    const componentMap = new Map<string, ComponentInfo>();
-
     const stories = storiesIndex.stories || storiesIndex.entries || {};
-    Object.values(stories).forEach(story => {
-      const componentName = story.title.split('/').pop() || story.title;
-      const categoryParts = story.title.split('/').slice(0, -1);
-      const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
 
-      let matches = false;
+    const filterFn = (story: any, componentName: string, category?: string) => {
+      const storyTitle = story.title || '';
+      const categoryParts = storyTitle.split('/').slice(0, -1);
+      const storyCategory = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
+
+      if (isWildcard) return true;
 
       switch (searchIn) {
         case 'name':
-          matches = isWildcard || componentName.toLowerCase().includes(query);
-          break;
+          return componentName.toLowerCase().includes(query);
         case 'title':
-          matches = isWildcard || story.title.toLowerCase().includes(query);
-          break;
+          return storyTitle.toLowerCase().includes(query);
         case 'category':
-          matches = isWildcard || (category ? category.toLowerCase().includes(query) : false);
-          break;
+          return storyCategory ? storyCategory.toLowerCase().includes(query) : false;
         case 'all':
         default:
-          matches =
-            isWildcard ||
+          return (
             componentName.toLowerCase().includes(query) ||
-            story.title.toLowerCase().includes(query) ||
-            Boolean(category && category.toLowerCase().includes(query));
-          break;
+            storyTitle.toLowerCase().includes(query) ||
+            Boolean(storyCategory && storyCategory.toLowerCase().includes(query))
+          );
       }
+    };
 
-      if (matches) {
-        if (!componentMap.has(componentName)) {
-          const componentInfo: ComponentInfo = {
-            id: story.id,
-            name: componentName,
-            title: story.title,
-            stories: [],
-          };
-
-          if (category) {
-            componentInfo.category = category;
-          }
-
-          componentMap.set(componentName, componentInfo);
-        }
-
-        componentMap.get(componentName)!.stories.push(story);
-      }
-    });
-
-    const allResults = Array.from(componentMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    const componentMap = mapStoriesToComponents(stories, { filterFn });
+    const allResults = getComponentsArray(componentMap);
 
     // Apply pagination
     const paginationResult = applyPagination(allResults, {

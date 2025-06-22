@@ -2,8 +2,8 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
 import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
 import { validateListComponentsInput } from '../utils/validators.js';
-import { ComponentInfo } from '../types/storybook.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
+import { mapStoriesToComponents, getComponentsArray } from '../utils/story-mapper.js';
 
 export const listComponentsTool: Tool = {
   name: 'list_components',
@@ -53,7 +53,6 @@ export async function handleListComponents(input: any) {
       );
     }
 
-    const componentMap = new Map<string, ComponentInfo>();
     const stories = Object.values(storiesData);
 
     if (stories.length === 0) {
@@ -63,40 +62,12 @@ export async function handleListComponents(input: any) {
       );
     }
 
-    stories.forEach(story => {
-      const componentName = story.title.split('/').pop() || story.title;
-      const categoryParts = story.title.split('/').slice(0, -1);
-      const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
+    const filterFn = validatedInput.category && validatedInput.category !== 'all'
+      ? (story: any, componentName: string, category?: string) => category === validatedInput.category
+      : undefined;
 
-      if (
-        validatedInput.category &&
-        validatedInput.category !== 'all' &&
-        category !== validatedInput.category
-      ) {
-        return;
-      }
-
-      if (!componentMap.has(componentName)) {
-        const componentInfo: ComponentInfo = {
-          id: story.id,
-          name: componentName,
-          title: story.title,
-          stories: [],
-        };
-
-        if (category) {
-          componentInfo.category = category;
-        }
-
-        componentMap.set(componentName, componentInfo);
-      }
-
-      componentMap.get(componentName)!.stories.push(story);
-    });
-
-    const allComponents = Array.from(componentMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    const componentMap = mapStoriesToComponents(storiesData, { filterFn });
+    const allComponents = getComponentsArray(componentMap);
 
     // Apply pagination
     const paginationResult = applyPagination(allComponents, {
