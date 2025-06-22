@@ -11,7 +11,7 @@ export const TIMEOUT_VALUES = {
   QUICK: 5000,
 
   /**
-   * Medium operations (10 seconds) 
+   * Medium operations (10 seconds)
    * - HTML content fetching
    * - Stories index loading
    * - Standard Storybook iframe requests
@@ -63,15 +63,21 @@ export function getOperationTimeout(operation: keyof typeof OPERATION_TIMEOUTS):
  * Get timeout category name for documentation/logging
  */
 export function getTimeoutCategory(timeoutMs: number): string {
-  if (timeoutMs <= TIMEOUT_VALUES.QUICK) return 'QUICK';
-  if (timeoutMs <= TIMEOUT_VALUES.MEDIUM) return 'MEDIUM';
+  if (timeoutMs <= TIMEOUT_VALUES.QUICK) {
+    return 'QUICK';
+  }
+  if (timeoutMs <= TIMEOUT_VALUES.MEDIUM) {
+    return 'MEDIUM';
+  }
   return 'HEAVY';
 }
 
 /**
  * Get recommended timeout for operation type
  */
-export function getRecommendedTimeout(operationType: 'api' | 'parsing' | 'rendering' | 'network'): number {
+export function getRecommendedTimeout(
+  operationType: 'api' | 'parsing' | 'rendering' | 'network'
+): number {
   switch (operationType) {
     case 'api':
       return TIMEOUT_VALUES.QUICK;
@@ -92,16 +98,16 @@ export function getRecommendedTimeout(operationType: 'api' | 'parsing' | 'render
 export function getEnvironmentTimeout(baseTimeout: number): number {
   const environment = process.env.NODE_ENV;
   const ciMode = process.env.CI === 'true';
-  
+
   // Increase timeouts in CI environments
   if (ciMode) {
     return Math.floor(baseTimeout * 1.5);
   }
-  
+
   // Increase timeouts in development for debugging
   if (environment === 'development') {
     return Math.floor(baseTimeout * 1.2);
   }
-  
+
   return baseTimeout;
 }

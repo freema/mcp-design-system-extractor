@@ -1,6 +1,6 @@
 export interface PaginationParams {
-  page?: number;
-  pageSize?: number;
+  page?: number | undefined;
+  pageSize?: number | undefined;
 }
 
 export interface PaginationResult<T> {
@@ -13,10 +13,7 @@ export interface PaginationResult<T> {
   endIndex: number;
 }
 
-export function applyPagination<T>(
-  items: T[],
-  params: PaginationParams
-): PaginationResult<T> {
+export function applyPagination<T>(items: T[], params: PaginationParams): PaginationResult<T> {
   const page = params.page || 1;
   const pageSize = params.pageSize || 50;
   const totalItems = items.length;

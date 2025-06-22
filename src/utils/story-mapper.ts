@@ -1,8 +1,8 @@
 import { ComponentInfo } from '../types/storybook.js';
 
 export interface StoryMappingOptions {
-  filterFn?: (story: any, componentName: string, category?: string) => boolean;
-  useComponentKey?: 'name' | 'title';
+  filterFn?: ((story: any, componentName: string, category?: string) => boolean) | undefined;
+  useComponentKey?: 'name' | 'title' | undefined;
 }
 
 export function mapStoriesToComponents(
@@ -11,24 +11,22 @@ export function mapStoriesToComponents(
 ): Map<string, ComponentInfo> {
   const { filterFn, useComponentKey = 'name' } = options;
   const componentMap = new Map<string, ComponentInfo>();
-  
+
   const storyArray = Array.isArray(stories) ? stories : Object.values(stories);
-  
+
   storyArray.forEach(story => {
     const componentName = story.title.split('/').pop() || story.title;
     const categoryParts = story.title.split('/').slice(0, -1);
     const category = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
-    
+
     // Apply filter if provided
     if (filterFn && !filterFn(story, componentName, category)) {
       return;
     }
-    
+
     // Determine the key to use for the component map
-    const mapKey = useComponentKey === 'title' 
-      ? story.title.toLowerCase() 
-      : componentName;
-    
+    const mapKey = useComponentKey === 'title' ? story.title.toLowerCase() : componentName;
+
     if (!componentMap.has(mapKey)) {
       const componentInfo: ComponentInfo = {
         id: story.id.split('--')[0] || story.id,
@@ -36,17 +34,17 @@ export function mapStoriesToComponents(
         title: story.title,
         stories: [],
       };
-      
+
       if (category) {
         componentInfo.category = category;
       }
-      
+
       componentMap.set(mapKey, componentInfo);
     }
-    
+
     componentMap.get(mapKey)!.stories.push(story);
   });
-  
+
   return componentMap;
 }
 

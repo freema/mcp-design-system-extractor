@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
+import { formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateGetComponentByPurposeInput } from '../utils/validators.js';
 import { ComponentByPurpose } from '../types/storybook.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
@@ -156,8 +156,9 @@ const PURPOSE_PATTERNS: Record<string, { patterns: RegExp[]; description: string
 };
 
 export async function handleGetComponentByPurpose(input: any) {
+  let validatedInput: any;
   try {
-    const validatedInput = validateGetComponentByPurposeInput(input);
+    validatedInput = validateGetComponentByPurposeInput(input);
     const purposeLower = validatedInput.purpose.toLowerCase();
     const client = new StorybookClient();
 
@@ -180,7 +181,7 @@ export async function handleGetComponentByPurpose(input: any) {
     } else {
       // Create patterns from the purpose string
       const words = purposeLower.split(/\s+/);
-      patterns = words.map(word => new RegExp(word, 'i'));
+      patterns = words.map((word: string) => new RegExp(word, 'i'));
       description = `Components related to ${validatedInput.purpose}`;
     }
 
@@ -188,16 +189,16 @@ export async function handleGetComponentByPurpose(input: any) {
     const filterFn = (story: any, componentName: string) => {
       const componentTitle = story.title || '';
       const storyName = story.name || story.story || '';
-      
+
       return patterns.some(
         pattern =>
           pattern.test(componentTitle) || pattern.test(storyName) || pattern.test(componentName)
       );
     };
 
-    const componentMap = mapStoriesToComponents(stories, { 
+    const componentMap = mapStoriesToComponents(stories, {
       filterFn,
-      useComponentKey: 'title'
+      useComponentKey: 'title',
     });
     const allComponents = getComponentsArray(componentMap);
 
@@ -221,12 +222,8 @@ export async function handleGetComponentByPurpose(input: any) {
 
     return formatSuccessResponse(result, message);
   } catch (error) {
-    return handleErrorWithContext(
-      error,
-      'get components by purpose',
-      { 
-        resource: 'components by purpose'
-      }
-    );
+    return handleErrorWithContext(error, 'get components by purpose', {
+      resource: 'components by purpose',
+    });
   }
 }

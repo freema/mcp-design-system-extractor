@@ -1,9 +1,13 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
+import { formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { extractDesignTokens } from '../utils/html-parser.js';
 import { DesignToken } from '../types/storybook.js';
-import { createSecurityError, createConnectionError, createTimeoutError } from '../utils/error-formatter.js';
+import {
+  createSecurityError,
+  createConnectionError,
+  createTimeoutError,
+} from '../utils/error-formatter.js';
 import { OPERATION_TIMEOUTS, getEnvironmentTimeout } from '../utils/timeout-constants.js';
 
 interface GetExternalCSSInput {
@@ -158,8 +162,9 @@ async function makeAbsoluteUrl(url: string, baseUrl: string): Promise<string> {
 }
 
 export async function handleGetExternalCSS(input: any) {
+  let validatedInput: any;
   try {
-    const validatedInput = validateGetExternalCSSInput(input);
+    validatedInput = validateGetExternalCSSInput(input);
     const client = new StorybookClient();
     const baseUrl = client.getStorybookUrl();
 
@@ -200,11 +205,7 @@ export async function handleGetExternalCSS(input: any) {
         );
         throw new Error(timeoutError.message);
       }
-      const connectionError = createConnectionError(
-        'fetch external CSS',
-        absoluteUrl,
-        error
-      );
+      const connectionError = createConnectionError('fetch external CSS', absoluteUrl, error);
       throw new Error(connectionError.message);
     } finally {
       clearTimeout(timeoutId);
@@ -273,14 +274,10 @@ export async function handleGetExternalCSS(input: any) {
 
     return formatSuccessResponse(result, message);
   } catch (error) {
-    return handleErrorWithContext(
-      error,
-      'get external CSS',
-      { 
-        url: validatedInput?.cssUrl,
-        resource: 'external CSS file'
-      }
-    );
+    return handleErrorWithContext(error, 'get external CSS', {
+      url: validatedInput?.cssUrl || 'unknown',
+      resource: 'external CSS file',
+    });
   }
 }
 

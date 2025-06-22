@@ -1,6 +1,10 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
+import {
+  handleError,
+  formatSuccessResponse,
+  handleErrorWithContext,
+} from '../utils/error-handler.js';
 import { validateGetComponentVariantsInput } from '../utils/validators.js';
 import { ComponentVariant } from '../types/storybook.js';
 import { createNotFoundError } from '../utils/error-formatter.js';
@@ -23,8 +27,9 @@ export const getComponentVariantsTool: Tool = {
 };
 
 export async function handleGetComponentVariants(input: any) {
+  let validatedInput: any;
   try {
-    const validatedInput = validateGetComponentVariantsInput(input);
+    validatedInput = validateGetComponentVariantsInput(input);
     const client = new StorybookClient();
 
     const storiesIndex = await client.fetchStoriesIndex();
@@ -60,10 +65,8 @@ export async function handleGetComponentVariants(input: any) {
       `Found ${variants.length} variants for component: ${validatedInput.componentName}`
     );
   } catch (error) {
-    return handleErrorWithContext(
-      error,
-      'get component variants',
-      { componentName: validatedInput?.componentName }
-    );
+    return handleErrorWithContext(error, 'get component variants', {
+      componentName: validatedInput?.componentName || 'unknown',
+    });
   }
 }

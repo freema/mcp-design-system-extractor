@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
+import { formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateListComponentsInput } from '../utils/validators.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
 import { mapStoriesToComponents, getComponentsArray } from '../utils/story-mapper.js';
@@ -31,8 +31,9 @@ export const listComponentsTool: Tool = {
 };
 
 export async function handleListComponents(input: any) {
+  let validatedInput: any;
   try {
-    const validatedInput = validateListComponentsInput(input);
+    validatedInput = validateListComponentsInput(input);
     const client = new StorybookClient();
 
     const storiesIndex = await client.fetchStoriesIndex();
@@ -62,11 +63,13 @@ export async function handleListComponents(input: any) {
       );
     }
 
-    const filterFn = validatedInput.category && validatedInput.category !== 'all'
-      ? (story: any, componentName: string, category?: string) => category === validatedInput.category
-      : undefined;
+    const filterFn =
+      validatedInput.category && validatedInput.category !== 'all'
+        ? (_story: any, _componentName: string, category?: string) =>
+            category === validatedInput.category
+        : undefined;
 
-    const componentMap = mapStoriesToComponents(storiesData, { filterFn });
+    const componentMap = mapStoriesToComponents(storiesData, filterFn ? { filterFn } : {});
     const allComponents = getComponentsArray(componentMap);
 
     // Apply pagination
@@ -83,13 +86,8 @@ export async function handleListComponents(input: any) {
 
     return formatSuccessResponse(paginationResult.items, message);
   } catch (error) {
-    return handleErrorWithContext(
-      error,
-      'list components',
-      { 
-        resource: 'components list',
-        category: validatedInput?.category 
-      }
-    );
+    return handleErrorWithContext(error, 'list components', {
+      resource: 'components list',
+    });
   }
 }

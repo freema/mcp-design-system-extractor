@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
+import { formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateSearchComponentsInput } from '../utils/validators.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
 import { mapStoriesToComponents, getComponentsArray } from '../utils/story-mapper.js';
@@ -49,12 +49,14 @@ export async function handleSearchComponents(input: any) {
     const storiesIndex = await client.fetchStoriesIndex();
     const stories = storiesIndex.stories || storiesIndex.entries || {};
 
-    const filterFn = (story: any, componentName: string, category?: string) => {
+    const filterFn = (story: any, componentName: string, _category?: string) => {
       const storyTitle = story.title || '';
       const categoryParts = storyTitle.split('/').slice(0, -1);
       const storyCategory = categoryParts.length > 0 ? categoryParts.join('/') : undefined;
 
-      if (isWildcard) return true;
+      if (isWildcard) {
+        return true;
+      }
 
       switch (searchIn) {
         case 'name':
@@ -68,7 +70,7 @@ export async function handleSearchComponents(input: any) {
           return (
             componentName.toLowerCase().includes(query) ||
             storyTitle.toLowerCase().includes(query) ||
-            Boolean(storyCategory && storyCategory.toLowerCase().includes(query))
+            Boolean(storyCategory?.toLowerCase().includes(query))
           );
       }
     };
@@ -90,12 +92,8 @@ export async function handleSearchComponents(input: any) {
 
     return formatSuccessResponse(paginationResult.items, message);
   } catch (error) {
-    return handleErrorWithContext(
-      error,
-      'search components',
-      { 
-        resource: 'component search results'
-      }
-    );
+    return handleErrorWithContext(error, 'search components', {
+      resource: 'component search results',
+    });
   }
 }

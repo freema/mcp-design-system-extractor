@@ -72,7 +72,11 @@ export function handleErrorWithContext(
     category = ErrorCategory.NOT_FOUND_ERROR;
   } else if (lowerMessage.includes('cors') || lowerMessage.includes('blocked by client')) {
     category = ErrorCategory.SECURITY_ERROR;
-  } else if (lowerMessage.includes('parse') || lowerMessage.includes('invalid') || lowerMessage.includes('malformed')) {
+  } else if (
+    lowerMessage.includes('parse') ||
+    lowerMessage.includes('invalid') ||
+    lowerMessage.includes('malformed')
+  ) {
     category = ErrorCategory.PARSING_ERROR;
   } else if (lowerMessage.includes('validation') || lowerMessage.includes('required')) {
     category = ErrorCategory.VALIDATION_ERROR;
@@ -81,7 +85,8 @@ export function handleErrorWithContext(
   }
 
   fullContext.category = category;
-  return handleCategorizedError(category, fullContext, error);
+  const errorToPass = error instanceof Error ? error : new Error(String(error));
+  return handleCategorizedError(category, fullContext, errorToPass);
 }
 
 export function formatSuccessResponse(data: any, message?: string): ToolResponse {

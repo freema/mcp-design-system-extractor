@@ -1,8 +1,8 @@
-import { parseHTMLDetailed, extractDesignTokens, parseCSSRules } from './html-css-parser.js';
+import { parseHTMLDetailed } from './html-css-parser.js';
 
 export function extractComponentStyles(html: string, styleSheets: string[] = []) {
   const result = parseHTMLDetailed(html, styleSheets);
-  
+
   return {
     storyId: '',
     cssRules: result.cssRules,

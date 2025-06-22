@@ -43,18 +43,21 @@ export function formatError(
   } = options;
 
   const errorInfo = ERROR_MESSAGES[category];
-  const troubleshootingSteps = TROUBLESHOOTING_TEMPLATES[category]?.slice(0, maxTroubleshootingSteps);
+  const troubleshootingSteps = TROUBLESHOOTING_TEMPLATES[category]?.slice(
+    0,
+    maxTroubleshootingSteps
+  );
 
   // Build main error message
   let message = `[${category}]: ${errorInfo.brief}`;
-  
+
   // Add context information
   if (context.resource) {
     message += `\nContext: ${context.operation} for ${context.resource}`;
   } else {
     message += `\nContext: ${context.operation}`;
   }
-  
+
   // Add suggestion
   message += `\nSuggestion: ${errorInfo.suggestion}`;
 
@@ -82,9 +85,7 @@ export function formatError(
 
   // Add debug information in development
   if (includeDebug && originalError) {
-    const debugInfo = typeof originalError === 'string' 
-      ? originalError 
-      : originalError.message;
+    const debugInfo = typeof originalError === 'string' ? originalError : originalError.message;
     message += `\nDebug: ${debugInfo}`;
   }
 
@@ -96,15 +97,21 @@ export function formatError(
     });
   }
 
-  return {
+  const result: FormattedError = {
     message,
     category,
     context,
-    troubleshooting: includeTroubleshooting ? troubleshootingSteps : undefined,
-    debug: includeDebug && originalError 
-      ? (typeof originalError === 'string' ? originalError : originalError.message)
-      : undefined,
   };
+
+  if (includeTroubleshooting && troubleshootingSteps) {
+    result.troubleshooting = troubleshootingSteps;
+  }
+
+  if (includeDebug && originalError) {
+    result.debug = typeof originalError === 'string' ? originalError : originalError.message;
+  }
+
+  return result;
 }
 
 /**
@@ -116,16 +123,17 @@ export function createConnectionError(
   originalError?: Error | string,
   statusCode?: number
 ): FormattedError {
-  return formatError(
-    ErrorCategory.CONNECTION_ERROR,
-    {
-      category: ErrorCategory.CONNECTION_ERROR,
-      operation,
-      url,
-      statusCode,
-    },
-    originalError
-  );
+  const context: ErrorContext = {
+    category: ErrorCategory.CONNECTION_ERROR,
+    operation,
+    url,
+  };
+
+  if (statusCode !== undefined) {
+    context.statusCode = statusCode;
+  }
+
+  return formatError(ErrorCategory.CONNECTION_ERROR, context, originalError);
 }
 
 /**
@@ -144,11 +152,15 @@ export function createNotFoundError(
     resource,
   };
 
-  if (storyId) context.storyId = storyId;
-  if (componentName) context.componentName = componentName;
+  if (storyId) {
+    context.storyId = storyId;
+  }
+  if (componentName) {
+    context.componentName = componentName;
+  }
 
   const error = formatError(ErrorCategory.NOT_FOUND_ERROR, context);
-  
+
   // Add custom suggestion if provided
   if (suggestion) {
     error.message = error.message.replace(
@@ -169,15 +181,23 @@ export function createTimeoutError(
   url?: string,
   resource?: string
 ): FormattedError {
+  const context: ErrorContext = {
+    category: ErrorCategory.TIMEOUT_ERROR,
+    operation,
+    timeout,
+  };
+
+  if (url !== undefined) {
+    context.url = url;
+  }
+
+  if (resource !== undefined) {
+    context.resource = resource;
+  }
+
   return formatError(
     ErrorCategory.TIMEOUT_ERROR,
-    {
-      category: ErrorCategory.TIMEOUT_ERROR,
-      operation,
-      timeout,
-      url,
-      resource,
-    },
+    context,
     `Operation timed out after ${timeout}ms`
   );
 }
@@ -190,15 +210,16 @@ export function createValidationError(
   details: string,
   parameter?: string
 ): FormattedError {
-  return formatError(
-    ErrorCategory.VALIDATION_ERROR,
-    {
-      category: ErrorCategory.VALIDATION_ERROR,
-      operation,
-      resource: parameter,
-    },
-    details
-  );
+  const context: ErrorContext = {
+    category: ErrorCategory.VALIDATION_ERROR,
+    operation,
+  };
+
+  if (parameter !== undefined) {
+    context.resource = parameter;
+  }
+
+  return formatError(ErrorCategory.VALIDATION_ERROR, context, details);
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
+import { formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateGetComponentHTMLInput } from '../utils/validators.js';
 import { ComponentHTML } from '../types/storybook.js';
 import { createTimeoutError } from '../utils/error-formatter.js';
@@ -29,12 +29,13 @@ export const getComponentHTMLTool: Tool = {
 };
 
 export async function handleGetComponentHTML(input: any) {
+  let validatedInput: any;
   try {
-    const validatedInput = validateGetComponentHTMLInput(input);
+    validatedInput = validateGetComponentHTMLInput(input);
     const client = new StorybookClient();
 
     const timeout = getEnvironmentTimeout(OPERATION_TIMEOUTS.fetchComponentHTML);
-    
+
     // Add timeout wrapper
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
@@ -65,13 +66,9 @@ export async function handleGetComponentHTML(input: any) {
       `Extracted HTML for component: ${validatedInput.componentId}`
     );
   } catch (error) {
-    return handleErrorWithContext(
-      error,
-      'get component HTML',
-      { 
-        storyId: validatedInput?.componentId,
-        resource: 'component HTML'
-      }
-    );
+    return handleErrorWithContext(error, 'get component HTML', {
+      storyId: validatedInput?.componentId || 'unknown',
+      resource: 'component HTML',
+    });
   }
 }

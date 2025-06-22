@@ -3,6 +3,12 @@ import { StorybookIndex, ComponentHTML } from '../types/storybook.js';
 import { Cache } from './cache.js';
 import { PuppeteerClient } from './puppeteer-client.js';
 import { extractStyles, extractClasses } from './html-css-parser.js';
+import {
+  createConnectionError,
+  createNotFoundError,
+  createTimeoutError,
+} from './error-formatter.js';
+import { OPERATION_TIMEOUTS, getEnvironmentTimeout } from './timeout-constants.js';
 
 export class StorybookClient {
   private baseUrl: string;
@@ -62,7 +68,7 @@ export class StorybookClient {
     for (const url of urls) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         const response = await fetch(url, {
           signal: controller.signal,
@@ -103,6 +109,8 @@ export class StorybookClient {
       return cached;
     }
 
+    const timeoutMs = getEnvironmentTimeout(OPERATION_TIMEOUTS.fetchComponentHTML);
+
     try {
       // First, validate that the story ID exists in the stories index
       const storiesIndex = await this.fetchStoriesIndex();
@@ -120,17 +128,15 @@ export class StorybookClient {
 
       const url = `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`;
 
-      const timeout = getEnvironmentTimeout(OPERATION_TIMEOUTS.fetchComponentHTML);
-
       // Try static HTML parsing first (faster)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const response = await fetch(url, {
         signal: controller.signal,
       });
 
-      clearTimeout(timeout);
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const connectionError = createConnectionError(
@@ -178,16 +184,18 @@ export class StorybookClient {
       if (error.name === 'AbortError') {
         const timeoutError = createTimeoutError(
           'fetch component HTML',
-          timeout,
+          timeoutMs,
           `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`,
           `story ${storyId}`
         );
         throw new Error(timeoutError.message);
       }
       // Re-throw formatted errors, wrap others
-      if (error.message.includes('[CONNECTION_ERROR]') || 
-          error.message.includes('[NOT_FOUND_ERROR]') ||
-          error.message.includes('[TIMEOUT_ERROR]')) {
+      if (
+        error.message.includes('[CONNECTION_ERROR]') ||
+        error.message.includes('[NOT_FOUND_ERROR]') ||
+        error.message.includes('[TIMEOUT_ERROR]')
+      ) {
         throw error;
       }
       const connectionError = createConnectionError(
@@ -207,5 +215,4 @@ export class StorybookClient {
       return false;
     }
   }
-
 }
