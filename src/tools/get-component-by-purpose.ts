@@ -3,6 +3,7 @@ import { StorybookClient } from '../utils/storybook-client.js';
 import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
 import { validateGetComponentByPurposeInput } from '../utils/validators.js';
 import { ComponentByPurpose, ComponentInfo } from '../types/storybook.js';
+import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
 
 export const getComponentByPurposeTool: Tool = {
   name: 'get_component_by_purpose',
@@ -222,32 +223,24 @@ export async function handleGetComponentByPurpose(input: any) {
     allComponents.sort((a, b) => a.name.localeCompare(b.name));
 
     // Apply pagination
-    const page = validatedInput.page || 1;
-    const pageSize = validatedInput.pageSize || 50;
-    const totalComponents = allComponents.length;
-    const totalPages = Math.ceil(totalComponents / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, totalComponents);
-
-    // Validate page number
-    if (page > totalPages && totalComponents > 0) {
-      throw new Error(
-        `Page ${page} exceeds total pages (${totalPages}). Please use a page number between 1 and ${totalPages}.`
-      );
-    }
-
-    const components = allComponents.slice(startIndex, endIndex);
+    const paginationResult = applyPagination(allComponents, {
+      page: validatedInput.page,
+      pageSize: validatedInput.pageSize,
+    });
 
     const result: ComponentByPurpose = {
       purpose: validatedInput.purpose,
-      components,
+      components: paginationResult.items,
       description,
     };
 
-    return formatSuccessResponse(
-      result,
-      `Found ${totalComponents} components for purpose: ${validatedInput.purpose} (showing page ${page}/${totalPages}, ${components.length} items)`
+    const message = formatPaginationMessage(
+      paginationResult,
+      'Found',
+      `for purpose: ${validatedInput.purpose}`
     );
+
+    return formatSuccessResponse(result, message);
   } catch (error) {
     return handleError(error);
   }

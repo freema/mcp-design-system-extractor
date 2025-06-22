@@ -3,6 +3,7 @@ import { StorybookClient } from '../utils/storybook-client.js';
 import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
 import { validateListComponentsInput } from '../utils/validators.js';
 import { ComponentInfo } from '../types/storybook.js';
+import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
 
 export const listComponentsTool: Tool = {
   name: 'list_components',
@@ -98,26 +99,18 @@ export async function handleListComponents(input: any) {
     );
 
     // Apply pagination
-    const page = validatedInput.page || 1;
-    const pageSize = validatedInput.pageSize || 50;
-    const totalComponents = allComponents.length;
-    const totalPages = Math.ceil(totalComponents / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, totalComponents);
+    const paginationResult = applyPagination(allComponents, {
+      page: validatedInput.page,
+      pageSize: validatedInput.pageSize,
+    });
 
-    // Validate page number
-    if (page > totalPages && totalComponents > 0) {
-      throw new Error(
-        `Page ${page} exceeds total pages (${totalPages}). Please use a page number between 1 and ${totalPages}.`
-      );
-    }
-
-    const components = allComponents.slice(startIndex, endIndex);
-
-    return formatSuccessResponse(
-      components,
-      `Found ${totalComponents} components (showing page ${page}/${totalPages}, ${components.length} items, filter: ${validatedInput.category || 'none'})`
+    const message = formatPaginationMessage(
+      paginationResult,
+      'Found',
+      `filter: ${validatedInput.category || 'none'}`
     );
+
+    return formatSuccessResponse(paginationResult.items, message);
   } catch (error) {
     return handleError(error);
   }

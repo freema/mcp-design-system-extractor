@@ -3,6 +3,7 @@ import { StorybookClient } from '../utils/storybook-client.js';
 import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
 import { validateSearchComponentsInput } from '../utils/validators.js';
 import { ComponentInfo } from '../types/storybook.js';
+import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
 
 export const searchComponentsTool: Tool = {
   name: 'search_components',
@@ -101,26 +102,18 @@ export async function handleSearchComponents(input: any) {
     );
 
     // Apply pagination
-    const page = validatedInput.page || 1;
-    const pageSize = validatedInput.pageSize || 50;
-    const totalResults = allResults.length;
-    const totalPages = Math.ceil(totalResults / pageSize);
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = Math.min(startIndex + pageSize, totalResults);
+    const paginationResult = applyPagination(allResults, {
+      page: validatedInput.page,
+      pageSize: validatedInput.pageSize,
+    });
 
-    // Validate page number
-    if (page > totalPages && totalResults > 0) {
-      throw new Error(
-        `Page ${page} exceeds total pages (${totalPages}). Please use a page number between 1 and ${totalPages}.`
-      );
-    }
-
-    const results = allResults.slice(startIndex, endIndex);
-
-    return formatSuccessResponse(
-      results,
-      `Found ${totalResults} components matching "${validatedInput.query}" (showing page ${page}/${totalPages}, ${results.length} items, searched in: ${searchIn})`
+    const message = formatPaginationMessage(
+      paginationResult,
+      'Found',
+      `matching "${validatedInput.query}", searched in: ${searchIn}`
     );
+
+    return formatSuccessResponse(paginationResult.items, message);
   } catch (error) {
     return handleError(error);
   }
