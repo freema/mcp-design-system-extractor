@@ -1,6 +1,12 @@
 # MCP Design System Extractor
 
-A Model Context Protocol (MCP) server that extracts component information from Storybook design systems. This server connects to a running Storybook instance and extracts HTML, styles, and component metadata directly from the Storybook iframe.
+A Model Context Protocol (MCP) server that extracts component information from Storybook design systems. Connects to Storybook instances (including https://storybook.js.org distributions) and extracts HTML, styles, and component metadata.
+
+## Key Dependencies
+
+- **Puppeteer**: Uses headless Chrome for dynamic JavaScript component rendering
+- **Chrome/Chromium**: Required for Puppeteer (automatically handled in Docker)
+- Works with built Storybook distributions from https://storybook.js.org
 
 ## Features
 
@@ -15,107 +21,21 @@ A Model Context Protocol (MCP) server that extracts component information from S
 - 🧩 **Composition Examples**: Get examples of how components are combined together
 - 📝 **External CSS Analysis**: Fetch and analyze CSS files to extract design tokens and variables
 
-## Installation
+## Quick Start
 
 ```bash
-npm install
-npm run build
+npm install && npm run build
+npm run setup  # Interactive setup for Claude Desktop
 ```
 
-## Quick Setup
-
-Use the interactive setup script to configure Claude Desktop:
-
-```bash
-npm run setup
-```
-
-This will:
-- Build the project if needed
-- Let you choose your Storybook URL (local or custom)
-- Test the connection
-- Configure Claude Desktop automatically
-
-## Manual Configuration
-
-Alternatively, set the Storybook URL via environment variable:
-
+Or set manually:
 ```bash
 export STORYBOOK_URL=http://localhost:6006
 ```
 
-Default: `http://localhost:6006`
-
 ## Usage
 
-### With Claude Desktop
-
-**Recommended:** Use the setup script:
-```bash
-npm run setup
-```
-
-**Manual:** Add to your Claude Desktop configuration:
-
-```json
-{
-  "mcpServers": {
-    "design-system-extractor": {
-      "command": "node",
-      "args": ["/path/to/mcp-design-system-extractor/dist/index.js"],
-      "env": {
-        "STORYBOOK_URL": "http://localhost:6006"
-      }
-    }
-  }
-}
-```
-
-### With Claude Code
-
-For development with Claude Code, add to your `.claude_code_config.json` in the project root:
-
-```json
-{
-  "mcpServers": {
-    "design-system-extractor": {
-      "command": "npm",
-      "args": ["run", "dev"],
-      "env": {
-        "STORYBOOK_URL": "http://localhost:6006"
-      }
-    }
-  }
-}
-```
-
-Or for production build:
-
-```json
-{
-  "mcpServers": {
-    "design-system-extractor": {
-      "command": "node",
-      "args": ["dist/index.js"],
-      "env": {
-        "STORYBOOK_URL": "http://localhost:6006"
-      }
-    }
-  }
-}
-```
-
-Then restart Claude Code to load the MCP server. You can verify it's working by using any of the design system tools in your Claude Code session.
-
-### Development
-
-```bash
-# Start in development mode
-npm run dev
-
-# Run with MCP Inspector
-npm run inspector:dev
-```
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed setup instructions.
 
 ## Available Tools
 
@@ -282,80 +202,25 @@ When using with Claude or other AI assistants:
 
 ## How It Works
 
-The server connects to Storybook using these endpoints:
-- `/index.json` or `/stories.json` - Component metadata
-- `/iframe.html?id=component--story` - Rendered components
-
-Key features:
-- **Dynamic Content Support**: Uses happy-dom to execute JavaScript and render dynamic content
-- **Smart Caching**: Caches responses for 5 minutes to improve performance
-- **Retry Logic**: Automatically retries failed requests up to 3 times
-- **Timeout Protection**: 10-second timeout on all network requests
-- **Better Error Messages**: Provides helpful suggestions when connections fail
-
-It extracts:
-- Component HTML structure (including dynamically rendered content)
-- CSS classes and inline styles
-- Component props and API documentation
-- Component dependencies and relationships
-- Design system tokens and theme information
-- External CSS files and design tokens from Storybook assets
+Connects to Storybook via `/index.json` and `/iframe.html` endpoints. Uses Puppeteer with headless Chrome for dynamic JavaScript rendering. Extracts component HTML, styles, props, dependencies, and design tokens with smart caching and timeout protection.
 
 ## Troubleshooting
 
-### Common Issues
-
-**Empty results from list_components or search_components:**
-- Ensure your Storybook is running and accessible at the configured URL
-- Check that `STORYBOOK_URL` environment variable is set correctly
-- Try accessing `/index.json` or `/stories.json` directly in your browser
-- Verify your Storybook has stories configured and published
-- Check the debug information returned in the tool response
-
-**"Found 0 components" with category filtering:**
-- Use `category: "all"` or omit the category parameter to see all components first
-- Check available categories from the initial `list_components` call
-- Category names are case-sensitive and must match exactly
-
-**Wildcard search not working:**
-- Use `query: "*"` (with quotes) to list all components in search_components
-- Ensure the query parameter is provided as a string
-
-**Component HTML extraction fails:**
-- Ensure you're using the exact story ID format: "component-name--story-name"
-- Use `get_component_variants` first to find valid story IDs
-- Check that the story exists and is published in Storybook
-
-**Connection issues:**
-- Verify Storybook is running (typically on port 6006)
-- Check CORS configuration in your Storybook
-- Ensure network connectivity to the Storybook URL
-- Try a different URL format (with/without trailing slash)
+- Ensure Storybook is running and `STORYBOOK_URL` is correct
+- Use exact story ID format: "component-name--story-name"
+- Try `list_components` first to see available components
+- Check `/index.json` endpoint directly in browser
+- See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed troubleshooting
 
 ## Requirements
 
 - Node.js 18+
+- Chrome/Chromium (for Puppeteer)
 - Running Storybook instance
-- Network access to Storybook URL
 
 ## Development
 
-```bash
-# Install dependencies
-npm install
-
-# Run TypeScript checks
-npm run typecheck
-
-# Run linting
-npm run lint
-
-# Build for production
-npm run build
-
-# Clean build files
-npm run clean
-```
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed development instructions.
 
 ## License
 
