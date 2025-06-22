@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
+import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateListComponentsInput } from '../utils/validators.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
 import { mapStoriesToComponents, getComponentsArray } from '../utils/story-mapper.js';
@@ -83,6 +83,13 @@ export async function handleListComponents(input: any) {
 
     return formatSuccessResponse(paginationResult.items, message);
   } catch (error) {
-    return handleError(error);
+    return handleErrorWithContext(
+      error,
+      'list components',
+      { 
+        resource: 'components list',
+        category: validatedInput?.category 
+      }
+    );
   }
 }

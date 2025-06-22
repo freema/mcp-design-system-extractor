@@ -1,8 +1,9 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
+import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateGetComponentVariantsInput } from '../utils/validators.js';
 import { ComponentVariant } from '../types/storybook.js';
+import { createNotFoundError } from '../utils/error-formatter.js';
 
 export const getComponentVariantsTool: Tool = {
   name: 'get_component_variants',
@@ -44,7 +45,14 @@ export async function handleGetComponentVariants(input: any) {
     });
 
     if (variants.length === 0) {
-      return handleError(`No variants found for component: ${validatedInput.componentName}`);
+      const notFoundError = createNotFoundError(
+        'get component variants',
+        'component',
+        'Use list_components tool to see all available components, or search_components to find similar component names',
+        undefined,
+        validatedInput.componentName
+      );
+      return handleError(notFoundError.message);
     }
 
     return formatSuccessResponse(
@@ -52,6 +60,10 @@ export async function handleGetComponentVariants(input: any) {
       `Found ${variants.length} variants for component: ${validatedInput.componentName}`
     );
   } catch (error) {
-    return handleError(error);
+    return handleErrorWithContext(
+      error,
+      'get component variants',
+      { componentName: validatedInput?.componentName }
+    );
   }
 }

@@ -1,6 +1,6 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
+import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateGetComponentByPurposeInput } from '../utils/validators.js';
 import { ComponentByPurpose } from '../types/storybook.js';
 import { applyPagination, formatPaginationMessage } from '../utils/pagination.js';
@@ -221,6 +221,12 @@ export async function handleGetComponentByPurpose(input: any) {
 
     return formatSuccessResponse(result, message);
   } catch (error) {
-    return handleError(error);
+    return handleErrorWithContext(
+      error,
+      'get components by purpose',
+      { 
+        resource: 'components by purpose'
+      }
+    );
   }
 }

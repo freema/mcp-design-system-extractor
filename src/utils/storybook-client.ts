@@ -2,6 +2,7 @@ import { parse } from 'node-html-parser';
 import { StorybookIndex, ComponentHTML } from '../types/storybook.js';
 import { Cache } from './cache.js';
 import { PuppeteerClient } from './puppeteer-client.js';
+import { extractStyles, extractClasses } from './html-css-parser.js';
 
 export class StorybookClient {
   private baseUrl: string;
@@ -67,7 +68,7 @@ export class StorybookClient {
           signal: controller.signal,
         });
 
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
 
         if (response.ok) {
           const data = (await response.json()) as StorybookIndex;
@@ -108,16 +109,22 @@ export class StorybookClient {
       const stories = storiesIndex.stories || storiesIndex.entries || {};
 
       if (!stories[storyId]) {
-        throw new Error(
-          `Story ID "${storyId}" not found in Storybook. Please check the ID is correct. Available stories can be found using list_components or get_component_variants tools.`
+        const notFoundError = createNotFoundError(
+          'fetch component HTML',
+          'story',
+          'Use list_components or get_component_variants tools to find available stories',
+          storyId
         );
+        throw new Error(notFoundError.message);
       }
 
       const url = `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`;
 
+      const timeout = getEnvironmentTimeout(OPERATION_TIMEOUTS.fetchComponentHTML);
+
       // Try static HTML parsing first (faster)
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
       const response = await fetch(url, {
         signal: controller.signal,
@@ -126,9 +133,13 @@ export class StorybookClient {
       clearTimeout(timeout);
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch story ${storyId}: ${response.status} ${response.statusText}`
+        const connectionError = createConnectionError(
+          'fetch component HTML',
+          url,
+          `HTTP ${response.status}: ${response.statusText}`,
+          response.status
         );
+        throw new Error(connectionError.message);
       }
 
       const html = await response.text();
@@ -144,8 +155,8 @@ export class StorybookClient {
       ) {
         // Static content found, use it
         const componentHTML = storyRoot.innerHTML;
-        const styles = this.extractStyles(root);
-        const classes = this.extractClasses(componentHTML);
+        const styles = extractStyles(root);
+        const classes = extractClasses(componentHTML);
 
         const result = {
           storyId,
@@ -165,11 +176,26 @@ export class StorybookClient {
       return result;
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        throw new Error(`Request timeout while fetching component HTML for ${storyId}`);
+        const timeoutError = createTimeoutError(
+          'fetch component HTML',
+          timeout,
+          `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`,
+          `story ${storyId}`
+        );
+        throw new Error(timeoutError.message);
       }
-      throw new Error(
-        `Failed to fetch component HTML for ${storyId}: ${error instanceof Error ? error.message : String(error)}`
+      // Re-throw formatted errors, wrap others
+      if (error.message.includes('[CONNECTION_ERROR]') || 
+          error.message.includes('[NOT_FOUND_ERROR]') ||
+          error.message.includes('[TIMEOUT_ERROR]')) {
+        throw error;
+      }
+      const connectionError = createConnectionError(
+        'fetch component HTML',
+        `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`,
+        error
       );
+      throw new Error(connectionError.message);
     }
   }
 
@@ -182,43 +208,4 @@ export class StorybookClient {
     }
   }
 
-  private extractStyles(root: any): string[] {
-    const styles: string[] = [];
-
-    // Extract inline styles
-    root.querySelectorAll('style').forEach((style: any) => {
-      if (style.text) {
-        styles.push(style.text);
-      }
-    });
-
-    // Add external stylesheet references
-    root.querySelectorAll('link[rel="stylesheet"]').forEach((link: any) => {
-      const href = link.getAttribute('href');
-      if (href) {
-        styles.push(`/* External stylesheet: ${href} */`);
-      }
-    });
-
-    return styles;
-  }
-
-  private extractClasses(html: string): string[] {
-    const classRegex = /class=["']([^"']+)["']/g;
-    const classes = new Set<string>();
-    let match;
-
-    while ((match = classRegex.exec(html)) !== null) {
-      if (match[1]) {
-        const classList = match[1].split(/\s+/);
-        classList.forEach(cls => {
-          if (cls.trim()) {
-            classes.add(cls.trim());
-          }
-        });
-      }
-    }
-
-    return Array.from(classes);
-  }
 }

@@ -1,8 +1,10 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
+import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { extractDesignTokens } from '../utils/html-parser.js';
 import { DesignToken } from '../types/storybook.js';
+import { createSecurityError, createConnectionError, createTimeoutError } from '../utils/error-formatter.js';
+import { OPERATION_TIMEOUTS, getEnvironmentTimeout } from '../utils/timeout-constants.js';
 
 interface GetExternalCSSInput {
   cssUrl: string;
@@ -166,18 +168,18 @@ export async function handleGetExternalCSS(input: any) {
 
     // Security check: Only allow URLs from the same domain as Storybook
     if (!isDomainAllowed(absoluteUrl, baseUrl)) {
-      const cssUrlObj = new URL(absoluteUrl);
-      const storybookUrlObj = new URL(baseUrl);
-      throw new Error(
-        `Security Error: CSS URL domain '${cssUrlObj.hostname}' is not allowed. ` +
-          `Only URLs from the Storybook domain '${storybookUrlObj.hostname}' are permitted for security reasons. ` +
-          `This prevents fetching CSS from external domains.`
+      const securityError = createSecurityError(
+        'fetch external CSS',
+        absoluteUrl,
+        'CSS URL domain is not allowed. Only URLs from the Storybook domain are permitted for security reasons.'
       );
+      throw new Error(securityError.message);
     }
 
     // Fetch CSS content with timeout
+    const timeout = getEnvironmentTimeout(OPERATION_TIMEOUTS.fetchExternalCSS);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     let response;
     try {
@@ -190,15 +192,32 @@ export async function handleGetExternalCSS(input: any) {
       });
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        throw new Error(`Timeout: CSS fetch took longer than 15 seconds`);
+        const timeoutError = createTimeoutError(
+          'fetch external CSS',
+          timeout,
+          absoluteUrl,
+          'CSS file'
+        );
+        throw new Error(timeoutError.message);
       }
-      throw new Error(`Failed to fetch CSS: ${error.message}`);
+      const connectionError = createConnectionError(
+        'fetch external CSS',
+        absoluteUrl,
+        error
+      );
+      throw new Error(connectionError.message);
     } finally {
       clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch CSS: ${response.status} ${response.statusText}`);
+      const connectionError = createConnectionError(
+        'fetch external CSS',
+        absoluteUrl,
+        `HTTP ${response.status}: ${response.statusText}`,
+        response.status
+      );
+      throw new Error(connectionError.message);
     }
 
     const cssContent = await response.text();
@@ -254,7 +273,14 @@ export async function handleGetExternalCSS(input: any) {
 
     return formatSuccessResponse(result, message);
   } catch (error) {
-    return handleError(error);
+    return handleErrorWithContext(
+      error,
+      'get external CSS',
+      { 
+        url: validatedInput?.cssUrl,
+        resource: 'external CSS file'
+      }
+    );
   }
 }
 

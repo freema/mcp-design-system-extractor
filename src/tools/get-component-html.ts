@@ -1,8 +1,10 @@
 import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { StorybookClient } from '../utils/storybook-client.js';
-import { handleError, formatSuccessResponse } from '../utils/error-handler.js';
+import { handleError, formatSuccessResponse, handleErrorWithContext } from '../utils/error-handler.js';
 import { validateGetComponentHTMLInput } from '../utils/validators.js';
 import { ComponentHTML } from '../types/storybook.js';
+import { createTimeoutError } from '../utils/error-formatter.js';
+import { OPERATION_TIMEOUTS, getEnvironmentTimeout } from '../utils/timeout-constants.js';
 
 export const getComponentHTMLTool: Tool = {
   name: 'get_component_html',
@@ -31,10 +33,20 @@ export async function handleGetComponentHTML(input: any) {
     const validatedInput = validateGetComponentHTMLInput(input);
     const client = new StorybookClient();
 
+    const timeout = getEnvironmentTimeout(OPERATION_TIMEOUTS.fetchComponentHTML);
+    
     // Add timeout wrapper
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Operation timed out after 8 seconds')), 8000)
-    );
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        const timeoutError = createTimeoutError(
+          'get component HTML',
+          timeout,
+          undefined,
+          `component ${validatedInput.componentId}`
+        );
+        reject(new Error(timeoutError.message));
+      }, timeout);
+    });
 
     const componentHTML = (await Promise.race([
       client.fetchComponentHTML(validatedInput.componentId),
@@ -53,6 +65,13 @@ export async function handleGetComponentHTML(input: any) {
       `Extracted HTML for component: ${validatedInput.componentId}`
     );
   } catch (error) {
-    return handleError(error);
+    return handleErrorWithContext(
+      error,
+      'get component HTML',
+      { 
+        storyId: validatedInput?.componentId,
+        resource: 'component HTML'
+      }
+    );
   }
 }
