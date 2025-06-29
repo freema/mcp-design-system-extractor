@@ -2,6 +2,10 @@
 
 A Model Context Protocol (MCP) server that extracts component information from Storybook design systems. This server connects to a running Storybook instance and extracts HTML, styles, and component metadata directly from the Storybook iframe.
 
+<a href="https://glama.ai/mcp/servers/@freema/mcp-design-system-extractor">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@freema/mcp-design-system-extractor/badge" alt="Design System Extractor MCP server" />
+</a>
+
 ## Features
 
 - 🔍 **List Components**: Get all available components from your Storybook
