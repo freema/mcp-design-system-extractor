@@ -70,15 +70,14 @@
     "dist",
     "README.md",
     "LICENSE",
-    "examples",
     "scripts"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/graslt/mcp-design-system-extractor.git"
+    "url": "git+https://github.com/freema/mcp-design-system-extractor.git"
   },
   "bugs": {
-    "url": "https://github.com/graslt/mcp-design-system-extractor/issues"
+    "url": "https://github.com/freema/mcp-design-system-extractor/issues"
   },
-  "homepage": "https://github.com/graslt/mcp-design-system-extractor#readme"
+  "homepage": "https://github.com/freema/mcp-design-system-extractor#readme"
 }
