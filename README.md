@@ -8,6 +8,7 @@ A Model Context Protocol (MCP) server that extracts component information from S
 - **Chrome/Chromium**: Required for Puppeteer (automatically handled in Docker)
 - Works with built Storybook distributions from https://storybook.js.org
 
+[![Trust Score](https://archestra.ai/mcp-catalog/api/badge/quality/freema/mcp-design-system-extractor)](https://archestra.ai/mcp-catalog/freema__mcp-design-system-extractor)
 <a href="https://glama.ai/mcp/servers/@freema/mcp-design-system-extractor">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@freema/mcp-design-system-extractor/badge" alt="Design System Extractor MCP server" />
 </a>
