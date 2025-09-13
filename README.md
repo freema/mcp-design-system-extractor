@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/freema-mcp-design-system-extractor-badge.png)](https://mseep.ai/app/freema-mcp-design-system-extractor)
+
 # MCP Design System Extractor
 
 A Model Context Protocol (MCP) server that extracts component information from Storybook design systems. Connects to Storybook instances (including https://storybook.js.org distributions) and extracts HTML, styles, and component metadata.
