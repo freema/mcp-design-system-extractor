@@ -226,6 +226,10 @@ Connects to Storybook via `/index.json` and `/iframe.html` endpoints. Uses Puppe
 
 See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed development instructions.
 
+## Author
+
+Created by [Tomáš Grasl](https://www.tomasgrasl.cz/)
+
 ## License
 
 MIT
