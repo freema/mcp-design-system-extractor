@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "design-system": {
+      "command": "npx",
+      "args": ["-y", "mcp-design-system-extractor@latest"]
+    }
+  }
+}
