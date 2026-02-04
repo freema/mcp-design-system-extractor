@@ -1,0 +1,11 @@
+{
+  "name": "design-system",
+  "description": "Extract components from Storybook design systems. Get HTML, styles, themes, and component metadata for AI-assisted UI development.",
+  "version": "1.1.1",
+  "author": {
+    "name": "Tomáš Grasl",
+    "url": "https://www.tomasgrasl.cz/"
+  },
+  "repository": "https://github.com/freema/mcp-design-system-extractor",
+  "license": "MIT"
+}
