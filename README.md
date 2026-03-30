@@ -37,6 +37,10 @@ npm install && npm run build
 npm run setup  # Interactive setup for Claude Desktop
 ```
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/freema-mcp-design-system-extractor).
+
 ## Key Dependencies
 
 - **Puppeteer**: Uses headless Chrome for dynamic JavaScript component rendering
