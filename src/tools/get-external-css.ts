@@ -203,10 +203,10 @@ export async function handleGetExternalCSS(input: any) {
           absoluteUrl,
           'CSS file'
         );
-        throw new Error(timeoutError.message);
+        throw new Error(timeoutError.message, { cause: error });
       }
       const connectionError = createConnectionError('fetch external CSS', absoluteUrl, error);
-      throw new Error(connectionError.message);
+      throw new Error(connectionError.message, { cause: error });
     } finally {
       clearTimeout(timeoutId);
     }

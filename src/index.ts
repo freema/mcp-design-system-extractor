@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+declare const __PKG_VERSION__: string;
+
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -44,7 +46,7 @@ async function main() {
   const server = new Server(
     {
       name: 'design-system-extractor',
-      version: '1.1.0',
+      version: __PKG_VERSION__,
       description:
         'Extract and use components from your Storybook design system. Find UI components like modals, dialogs, buttons, forms, and more. Helps integrate design system components into your projects.',
     },

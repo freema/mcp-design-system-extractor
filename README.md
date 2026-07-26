@@ -257,9 +257,22 @@ Connects to Storybook via `/index.json` and `/iframe.html` endpoints. Uses Puppe
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - Chrome/Chromium (for Puppeteer)
-- Running Storybook instance
+- Running Storybook instance (see below for supported versions)
+
+### Supported Storybook versions
+
+**Storybook 7, 8, 9 and 10.** The server reads the story index from
+`/index.json`, falling back to `/stories.json`, and renders stories through
+`/iframe.html?id=<storyId>` — endpoints that have been stable across all four
+major versions.
+
+Storybook 6 and earlier are not supported: they predate `/index.json` and use
+a different story-id scheme.
+
+Both a dev server (`npm run storybook`) and a built static Storybook served
+over HTTP will work.
 
 ## Development
 

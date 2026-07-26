@@ -280,6 +280,34 @@ export function createCertificateError(
 }
 
 /**
+ * Best-effort human-readable text for an unknown thrown value.
+ *
+ * `String(value)` is fine for strings and Errors but degrades to
+ * "[object Object]" for plain objects, which defeats any substring matching
+ * done on the result.
+ */
+function toMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (typeof error === 'object' && error !== null) {
+    const { message } = error as { message?: unknown };
+    if (typeof message === 'string') {
+      return message;
+    }
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return '';
+    }
+  }
+  return String(error);
+}
+
+/**
  * Check if an error is related to SSL/TLS certificate issues
  */
 export function isSSLCertificateError(error: unknown): boolean {
@@ -287,9 +315,12 @@ export function isSSLCertificateError(error: unknown): boolean {
     return false;
   }
 
-  const message =
-    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-  const code = error instanceof Error && 'code' in error ? String((error as any).code) : '';
+  // Node throws plain objects in places (undici, some Puppeteer paths), and a
+  // bare String() on those yields "[object Object]" — every check below would
+  // then silently miss. Reach for a `message` property before giving up.
+  const message = toMessage(error).toLowerCase();
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
 
   return (
     message.includes('certificate') ||
