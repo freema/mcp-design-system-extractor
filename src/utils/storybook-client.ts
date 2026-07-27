@@ -13,7 +13,7 @@ import { OPERATION_TIMEOUTS, getEnvironmentTimeout } from './timeout-constants.j
 export class StorybookClient {
   private baseUrl: string;
   private cache: Cache;
-  private puppeteerClient: PuppeteerClient | null = null;
+  private puppeteerClientPromise: Promise<PuppeteerClient> | null = null;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || process.env.STORYBOOK_URL || 'http://localhost:6006';
@@ -22,7 +22,9 @@ export class StorybookClient {
     try {
       new URL(this.baseUrl);
     } catch (error) {
-      throw new Error('STORYBOOK_URL must be a valid URL starting with http:// or https://');
+      throw new Error('STORYBOOK_URL must be a valid URL starting with http:// or https://', {
+        cause: error,
+      });
     }
 
     if (!this.baseUrl.startsWith('http')) {
@@ -40,18 +42,36 @@ export class StorybookClient {
     return this.baseUrl;
   }
 
-  private async getPuppeteerClient(): Promise<PuppeteerClient> {
-    if (!this.puppeteerClient) {
-      this.puppeteerClient = new PuppeteerClient();
-      await this.puppeteerClient.launch();
+  /**
+   * Lazily start the browser, at most once.
+   *
+   * Caches the in-flight promise rather than the resolved client. Two
+   * concurrent callers used to both see a null field, both construct a
+   * PuppeteerClient and both launch a browser; the second assignment won the
+   * field and the first browser was orphaned mid-request, which surfaced as a
+   * spurious connection error on one of any two parallel jobs.
+   */
+  private getPuppeteerClient(): Promise<PuppeteerClient> {
+    if (!this.puppeteerClientPromise) {
+      const client = new PuppeteerClient();
+      this.puppeteerClientPromise = client
+        .launch()
+        .then(() => client)
+        .catch((error: unknown) => {
+          // Don't cache a failed launch — the next call should retry.
+          this.puppeteerClientPromise = null;
+          throw error;
+        });
     }
-    return this.puppeteerClient;
+    return this.puppeteerClientPromise;
   }
 
   async close(): Promise<void> {
-    if (this.puppeteerClient) {
-      await this.puppeteerClient.close();
-      this.puppeteerClient = null;
+    const pending = this.puppeteerClientPromise;
+    this.puppeteerClientPromise = null;
+    if (pending) {
+      const client = await pending.catch(() => null);
+      await client?.close();
     }
   }
 
@@ -188,7 +208,7 @@ export class StorybookClient {
           `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`,
           `story ${storyId}`
         );
-        throw new Error(timeoutError.message);
+        throw new Error(timeoutError.message, { cause: error });
       }
       // Re-throw formatted errors, wrap others
       if (
@@ -203,7 +223,7 @@ export class StorybookClient {
         `${this.baseUrl}/iframe.html?id=${encodeURIComponent(storyId)}`,
         error
       );
-      throw new Error(connectionError.message);
+      throw new Error(connectionError.message, { cause: error });
     }
   }
 }

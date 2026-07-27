@@ -1,0 +1,39 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.freema/mcp-design-system-extractor",
+  "description": "MCP server for Storybook design systems — extract component HTML, styles and metadata.",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/freema/mcp-design-system-extractor",
+    "source": "github"
+  },
+  "version": "1.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "mcp-design-system-extractor",
+      "version": "1.2.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "STORYBOOK_URL",
+          "description": "Base URL of the Storybook instance (default: http://localhost:6006)",
+          "isRequired": false
+        },
+        {
+          "name": "NODE_TLS_REJECT_UNAUTHORIZED",
+          "description": "Set to 0 to allow self-signed certificates on the Storybook host",
+          "isRequired": false
+        },
+        {
+          "name": "DEBUG",
+          "description": "Set to true for verbose logging on stderr",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}
