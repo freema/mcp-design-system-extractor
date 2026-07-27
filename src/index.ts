@@ -14,6 +14,7 @@ import {
 
 import * as tools from './tools/index.js';
 import { jobQueue } from './services/job-queue.js';
+import { OUTPUT_SCHEMAS } from './config/output-schemas.js';
 
 const toolHandlers = new Map<string, (input: any) => Promise<any>>([
   ['list_components', tools.handleListComponents],
@@ -27,6 +28,9 @@ const toolHandlers = new Map<string, (input: any) => Promise<any>>([
   ['job_list', tools.handleJobList],
 ]);
 
+// Declared here rather than on each tool definition so the schemas stay in
+// one file next to each other; a mismatch between two of them is easier to
+// spot than a mismatch spread across nine.
 const allTools = [
   tools.listComponentsTool,
   tools.getComponentHTMLTool,
@@ -37,7 +41,7 @@ const allTools = [
   tools.jobStatusTool,
   tools.jobCancelTool,
   tools.jobListTool,
-];
+].map(tool => ({ ...tool, outputSchema: OUTPUT_SCHEMAS[tool.name] }));
 
 async function main() {
   // Start the background job processor for async operations
