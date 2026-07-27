@@ -282,7 +282,16 @@ export async function handleSearchComponents(input: any) {
       ? { description: purposeConfig.description, components: paginationResult.items }
       : paginationResult.items;
 
-    return formatSuccessResponse(response, message);
+    return formatSuccessResponse(response, message, {
+      components: paginationResult.items,
+      ...(purposeConfig && { description: purposeConfig.description }),
+      pagination: {
+        page: paginationResult.page,
+        pageSize: paginationResult.pageSize,
+        totalItems: paginationResult.totalItems,
+        totalPages: paginationResult.totalPages,
+      },
+    });
   } catch (error) {
     return handleErrorWithContext(error, 'search components', {
       resource: 'component search results',

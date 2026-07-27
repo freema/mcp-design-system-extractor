@@ -68,7 +68,11 @@ export async function handleListComponents(input: any) {
     if (stories.length === 0) {
       return formatSuccessResponse(
         [],
-        `No components found in Storybook at ${client.getStorybookUrl()}. Ensure your Storybook has stories configured and is accessible. Debug info: storiesData keys: ${Object.keys(storiesData).slice(0, 5).join(', ')}`
+        `No components found in Storybook at ${client.getStorybookUrl()}. Ensure your Storybook has stories configured and is accessible. Debug info: storiesData keys: ${Object.keys(storiesData).slice(0, 5).join(', ')}`,
+        {
+          components: [],
+          pagination: { page: 1, pageSize: 0, totalItems: 0, totalPages: 0 },
+        }
       );
     }
 
@@ -99,7 +103,15 @@ export async function handleListComponents(input: any) {
         ? toCompactComponents(paginationResult.items)
         : paginationResult.items;
 
-    return formatSuccessResponse(items, message);
+    return formatSuccessResponse(items, message, {
+      components: items,
+      pagination: {
+        page: paginationResult.page,
+        pageSize: paginationResult.pageSize,
+        totalItems: paginationResult.totalItems,
+        totalPages: paginationResult.totalPages,
+      },
+    });
   } catch (error) {
     return handleErrorWithContext(error, 'list components', {
       resource: 'components list',

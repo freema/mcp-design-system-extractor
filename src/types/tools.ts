@@ -4,6 +4,10 @@ export interface ToolResponse {
     text?: string;
     resource?: any;
   }>;
+  /** Matches the tool's declared `outputSchema`. Absent on errors. */
+  structuredContent?: Record<string, unknown>;
+  /** Set on a failed call so clients do not read the error text as a result. */
+  isError?: boolean;
 }
 
 export interface ListComponentsInput {

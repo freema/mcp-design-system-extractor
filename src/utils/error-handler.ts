@@ -18,6 +18,7 @@ export function handleError(error: unknown): ToolResponse {
         text: `Error: ${message}`,
       },
     ],
+    isError: true,
   };
 }
 
@@ -32,6 +33,10 @@ export function handleFormattedError(formattedError: FormattedError): ToolRespon
         text: `Error: ${formattedError.message}`,
       },
     ],
+    // Without this a client reads the error text as a successful result, and
+    // a tool that declares an outputSchema would additionally look like it
+    // returned nothing structured for no reason.
+    isError: true,
   };
 }
 
@@ -91,8 +96,17 @@ export function handleErrorWithContext(
   return handleCategorizedError(category, fullContext, errorToPass);
 }
 
-export function formatSuccessResponse(data: any, message?: string): ToolResponse {
-  return {
+/**
+ * @param structured what to expose as `structuredContent`, when it differs
+ *   from `data` — needed where `data` is an array, since `structuredContent`
+ *   must be an object. Omit it and `data` is used as-is.
+ */
+export function formatSuccessResponse(
+  data: any,
+  message?: string,
+  structured?: Record<string, unknown>
+): ToolResponse {
+  const response: ToolResponse = {
     content: [
       {
         type: 'text',
@@ -102,6 +116,16 @@ export function formatSuccessResponse(data: any, message?: string): ToolResponse
       },
     ],
   };
+
+  // Every tool declares an outputSchema, so every success has to carry the
+  // matching structured payload. The text block above is left exactly as it
+  // was: clients that only read text are unaffected.
+  const payload = structured ?? (Array.isArray(data) ? undefined : data);
+  if (payload && typeof payload === 'object') {
+    response.structuredContent = payload as Record<string, unknown>;
+  }
+
+  return response;
 }
 
 export function formatTextResponse(text: string): ToolResponse {
