@@ -83,10 +83,16 @@ export function formatError(
     message += `\n\n${contextDetails.join(', ')}`;
   }
 
-  // Add debug information in development
-  if (includeDebug && originalError) {
-    const debugInfo = typeof originalError === 'string' ? originalError : originalError.message;
-    message += `\nDebug: ${debugInfo}`;
+  // Always surface what actually went wrong. The category templates are
+  // generic by design, so on their own they can be flatly wrong: a pagination
+  // error ("Page 9 exceeds total pages (3)") fell through to the connection
+  // template and told the caller Storybook was unreachable. The caller here is
+  // usually a model, which then goes and debugs the wrong thing.
+  if (originalError) {
+    const details = typeof originalError === 'string' ? originalError : originalError.message;
+    if (details) {
+      message += `\nDetails: ${details}`;
+    }
   }
 
   // Add troubleshooting steps
