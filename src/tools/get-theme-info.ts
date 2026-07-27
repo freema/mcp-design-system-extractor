@@ -109,12 +109,17 @@ export async function handleGetThemeInfo(input: any) {
     for (const [name, value] of Object.entries(allTokens)) {
       const lowerName = name.toLowerCase();
 
+      // What the token is called beats what its value looks like. The value
+      // heuristics used to run inside the colour and spacing branches, so
+      // every bare unit value was swallowed as spacing: `--breakpoint-md:
+      // 960px` and `--radius-sm: 2px` never reached their own bucket, and the
+      // empty-breakpoints fallback below then filled the response with
+      // defaults the design system had actually defined.
       if (
         lowerName.includes('color') ||
         lowerName.includes('bg') ||
         lowerName.includes('text') ||
-        lowerName.includes('border') ||
-        isColorValue(value)
+        lowerName.includes('border')
       ) {
         theme.colors[name] = value;
       } else if (
@@ -122,13 +127,11 @@ export async function handleGetThemeInfo(input: any) {
         lowerName.includes('spacing') ||
         lowerName.includes('margin') ||
         lowerName.includes('padding') ||
-        lowerName.includes('gap') ||
-        isSpacingValue(value)
+        lowerName.includes('gap')
       ) {
         theme.spacing[name] = value;
       } else if (
         lowerName.includes('font') ||
-        lowerName.includes('text') ||
         lowerName.includes('line') ||
         lowerName.includes('letter')
       ) {
@@ -143,6 +146,10 @@ export async function handleGetThemeInfo(input: any) {
         theme.shadows[name] = value;
       } else if (lowerName.includes('radius') || lowerName.includes('rounded')) {
         theme.radii[name] = value;
+      } else if (isColorValue(value)) {
+        theme.colors[name] = value;
+      } else if (isSpacingValue(value)) {
+        theme.spacing[name] = value;
       } else if (includeAll) {
         // If includeAll is true, add uncategorized tokens to a special category
         if (!(theme as any).other) {

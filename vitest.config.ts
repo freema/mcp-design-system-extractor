@@ -23,15 +23,15 @@ export default defineConfig({
         'tests/**',
         'scripts/**',
       ],
-      // Today's real numbers, not an aspiration. 80 was configured but never
-      // enforced (CI ran `vitest run`, so it never loaded), and the honest
-      // figure with every source file measured is ~5%. These are a floor that
-      // stops further slippage; the follow-up test work raises them.
+      // Today's real numbers, not an aspiration — a ratchet that stops
+      // slippage. What is left uncovered is `src/index.ts` (the stdio wiring)
+      // and `puppeteer-client.ts`, which needs a real browser; both belong in
+      // an integration suite rather than here.
       thresholds: {
-        branches: 4,
-        functions: 5,
-        lines: 5,
-        statements: 5,
+        branches: 84,
+        functions: 78,
+        lines: 88,
+        statements: 87,
       },
     },
     include: ['tests/**/*.test.ts'],

@@ -168,13 +168,21 @@ export function parseCSSRules(css: string): CSSRule[] {
     const styleBlock = match[2];
 
     const styles: Record<string, string> = {};
-    const propertyRegex = /([^:]+):\s*([^;]+)/g;
-    let propMatch;
 
-    while ((propMatch = propertyRegex.exec(styleBlock)) !== null) {
-      if (propMatch[1] && propMatch[2]) {
-        const property = propMatch[1].trim();
-        const value = propMatch[2].trim();
+    // Split on the declaration separator first. Running a single
+    // `([^:]+):\s*([^;]+)` regex across the whole block swallowed the
+    // separator into the next property name, so `color: red; padding: 4px`
+    // produced a key of `; padding` for everything after the first
+    // declaration.
+    for (const declaration of styleBlock.split(';')) {
+      const separator = declaration.indexOf(':');
+      if (separator === -1) {
+        continue;
+      }
+
+      const property = declaration.slice(0, separator).trim();
+      const value = declaration.slice(separator + 1).trim();
+      if (property && value) {
         styles[property] = value;
       }
     }
