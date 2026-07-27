@@ -6,6 +6,7 @@ import {
   COMPONENT_HTML,
   type StorybookClientStub,
 } from '../../helpers/storybook-fixture.js';
+import { getEnvironmentTimeout } from '../../../src/utils/timeout-constants.js';
 
 let stub: StorybookClientStub;
 
@@ -144,16 +145,22 @@ describe('jobQueue.runSync', () => {
   });
 
   it('times out a fetch that never resolves', async () => {
+    // The requested timeout is scaled by the environment — CI gets 1.5× — so
+    // the deadline has to be derived, not hardcoded, or this hangs on CI and
+    // passes locally.
+    const requested = 5000;
+    const effective = getEnvironmentTimeout(requested);
+
     vi.useFakeTimers();
     stub.fetchComponentHTML.mockReturnValue(new Promise(() => {}));
 
     const pending = jobQueue.runSync('get_component_html', {
       componentId: 'components-button--primary',
-      timeout: 5000,
+      timeout: requested,
     });
-    const assertion = expect(pending).rejects.toThrow('Operation timed out after 5000ms');
+    const assertion = expect(pending).rejects.toThrow(`Operation timed out after ${effective}ms`);
 
-    await vi.advanceTimersByTimeAsync(5001);
+    await vi.advanceTimersByTimeAsync(effective + 1);
     await assertion;
     vi.useRealTimers();
   });
