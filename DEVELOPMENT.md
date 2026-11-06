@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22.12+
 - Network access to Storybook URL
 - Chrome/Chromium browser (for Puppeteer)
 

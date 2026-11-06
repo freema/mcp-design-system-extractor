@@ -257,7 +257,7 @@ Connects to Storybook via `/index.json` and `/iframe.html` endpoints. Uses Puppe
 
 ## Requirements
 
-- Node.js 20+
+- Node.js 22.12+
 - Chrome/Chromium (for Puppeteer)
 - Running Storybook instance (see below for supported versions)
 

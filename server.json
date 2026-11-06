@@ -1,19 +1,18 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.freema/mcp-design-system-extractor",
   "description": "MCP server for Storybook design systems — extract component HTML, styles and metadata.",
-  "status": "active",
   "repository": {
     "url": "https://github.com/freema/mcp-design-system-extractor",
     "source": "github"
   },
-  "version": "1.2.0",
+  "version": "1.3.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcp-design-system-extractor",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "transport": {
         "type": "stdio"
       },

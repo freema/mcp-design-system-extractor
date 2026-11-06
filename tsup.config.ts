@@ -6,7 +6,7 @@ export default defineConfig({
   entry: ['src/index.ts'],
   outDir: 'dist',
   format: ['esm'],
-  target: 'node20',
+  target: 'node22',
   bundle: true,
   minify: false,
   sourcemap: false,
